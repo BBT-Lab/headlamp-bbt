@@ -1,122 +1,42 @@
-<h1>
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="frontend/src/resources/logo-light.svg">
-    <img src="frontend/src/resources/logo-dark.svg" alt="Headlamp">
-  </picture>
-</h1>
+# Headlamp BBT
 
-[![OpenSSF Best Practices](https://www.bestpractices.dev/projects/7551/badge)](https://www.bestpractices.dev/projects/7551)
-[![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/kubernetes-sigs/headlamp/badge)](https://scorecard.dev/viewer/?uri=github.com/kubernetes-sigs/headlamp)
-[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fheadlamp-k8s%2Fheadlamp.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fheadlamp-k8s%2Fheadlamp?ref=badge_shield)
+Headlamp BBT基于[Headlamp](https://github.com/kubernetes-sigs/headlamp)，为BBT集群提供Kubernetes网页管理界面。项目会根据集群使用需求修改网页，并开发或修改Headlamp插件。
 
-Headlamp is an easy-to-use and extensible Kubernetes web UI.
+Headlamp支持查看和管理Kubernetes资源、查看容器日志、使用终端以及通过插件扩展功能。用户可查看和操作的资源取决于其Kubernetes权限。
 
-Headlamp lets you view and manage Kubernetes resources through a graphical interface,
-with plugins to extend its functionality.
+## 仓库与协作
 
-<div align="center">
-  <img src="https://raw.githubusercontent.com/kubernetes-sigs/headlamp/screenshots/videos/headlamp_quick_run.gif" alt="Headlamp in action" width="80%">
-</div>
+- [GitHub主仓库](https://github.com/BBT-Lab/headlamp-bbt)：代码协作、Issue、Pull Request、Actions和Release。
+- [GitLab同步仓库](http://git.bbt.sspu.edu.cn/Qintsg/headlamp-bbt)：代码与Release同步，以及GitOps部署。
+- [Headlamp上游仓库](https://github.com/kubernetes-sigs/headlamp)。
 
-## Features
+主分支为`main`。请通过GitHub Pull Request合并改动，并将分支和标签同步到两个仓库。详细约定见[AGENTS.md](./AGENTS.md)。
 
-- Vendor-independent Kubernetes UI
-- Runs in-cluster or locally as a desktop app
-- Multi-cluster support
-- Extensible through [plugins](https://github.com/headlamp-k8s/plugins)
-- UI controls that reflect user permissions
-- Clean, modern UI
-- Cancellable create, update, and delete operations
-- Logs, terminal access, and a resource editor with documentation
-- Read and write access based on user permissions
+## 本地开发
 
-## Screenshots
+开发环境需要Node.js、npm和Go。版本要求分别见[package.json](./package.json)和[backend/go.mod](./backend/go.mod)。在项目根目录执行：
 
-<table>
-    <tr>
-        <td width="33%"><img src="https://raw.githubusercontent.com/kubernetes-sigs/headlamp/screenshots/screenshots/home.png" alt="Cluster overview"></td>
-        <td width="33%"><img src="https://raw.githubusercontent.com/kubernetes-sigs/headlamp/screenshots/screenshots/cluster_chooser.png" alt="Cluster chooser"></td>
-    </tr>
-    <tr>
-        <td width="33%"><img src="https://raw.githubusercontent.com/kubernetes-sigs/headlamp/screenshots/screenshots/workloads.png" alt="Workloads overview"></td>
-        <td width="33%"><img src="https://raw.githubusercontent.com/kubernetes-sigs/headlamp/screenshots/screenshots/resource_edition.png" alt="Resource editor"></td>
-    </tr>
-    <tr>
-        <td width="33%"><img src="https://raw.githubusercontent.com/kubernetes-sigs/headlamp/screenshots/screenshots/logs.png" alt="Container logs"></td>
-        <td width="33%"><img src="https://raw.githubusercontent.com/kubernetes-sigs/headlamp/screenshots/screenshots/terminal.png" alt="Container terminal"></td>
-    </tr>
-</table>
+```bash
+npm install
+npm run frontend:install
+npm run backend:build
+npm start
+```
 
-## Quick start
+前端开发服务器默认使用`http://localhost:3000`。构建和测试命令：
 
-To deploy Headlamp in your cluster, follow the
-[in-cluster installation guide](https://headlamp.dev/docs/latest/installation/in-cluster/).
-Container images are published as `ghcr.io/headlamp-k8s/headlamp` on
-[GitHub Container Registry](https://github.com/orgs/headlamp-k8s/packages).
+```bash
+npm run build
+npm run frontend:test
+npm run backend:test
+```
 
-To run Headlamp locally, install the
-[desktop application](https://headlamp.dev/docs/latest/installation/desktop/)
-for [Linux](https://headlamp.dev/docs/latest/installation/desktop/linux-installation),
-[macOS](https://headlamp.dev/docs/latest/installation/desktop/mac-installation),
-or [Windows](https://headlamp.dev/docs/latest/installation/desktop/win-installation).
-Make sure your kubeconfig is configured for the clusters you want to access.
-See the [desktop configuration options](https://headlamp.dev/docs/latest/installation/desktop/#use-a-non-default-kube-config-file)
-to use a non-default kubeconfig file or multiple files.
+更多说明见[开发指南](./docs/development/index.md)、[前端开发](./docs/development/frontend.md)、[后端开发](./docs/development/backend.md)和[插件开发](./docs/development/plugins/index.md)。
 
-### Access and permissions
+## 发布与部署
 
-Headlamp uses Kubernetes [role-based access control (RBAC)](https://kubernetes.io/docs/reference/access-authn-authz/rbac)
-to determine which resources you can view and which actions you can perform.
-The resources available in Headlamp depend on the permissions granted to your credentials.
+每次发布新版本时，在GitHub和GitLab发布相同版本，通过GitLab的GitOps配置和Argo CD将网页部署到[headlamp.bbt.sspu.edu.cn](https://headlamp.bbt.sspu.edu.cn)。
 
-For token-based authentication, see how to
-[create a service account token](https://headlamp.dev/docs/latest/installation/#create-a-service-account-token).
+## 许可证
 
-## Quick start for contributors
-
-Want to hack on Headlamp? We'd love your help!
-
-See the [contributing guidelines](./CONTRIBUTING.md) for local development setup,
-build instructions, and platform-specific tips.
-
-For more detailed documentation, see the [development guide](https://headlamp.dev/docs/latest/development/).
-
-## Tested platforms
-
-See the [Kubernetes platforms](./docs/platforms.md) Headlamp has been tested with.
-Please contribute results for other platforms or report regressions.
-
-## Extensions and plugins
-
-Browse [Headlamp plugins on Artifact Hub](https://artifacthub.io/packages/search?kind=21&sort=relevance&page=1)
-for published plugins.
-
-See the [plugins repository](https://github.com/headlamp-k8s/plugins) for official plugins.
-
-### Plugin development
-
-To extend Headlamp for your use cases, see the
-[plugin development guide](https://headlamp.dev/docs/latest/development/plugins/).
-
-## Get involved
-
-Join the community and contribute:
-
-- [Contribution guidelines](https://headlamp.dev/docs/latest/contributing/)
-- [Code of Conduct](./code-of-conduct.md)
-- [#headlamp channel on Kubernetes Slack](https://kubernetes.slack.com/messages/headlamp)
-- [Monthly community meeting](https://zoom-lfx.platform.linuxfoundation.org/meetings/headlamp)
-
-## Roadmap and release planning
-
-Track upcoming releases in [GitHub milestones](https://github.com/kubernetes-sigs/headlamp/milestones)
-and proposed changes in [GitHub issues](https://github.com/kubernetes-sigs/headlamp/issues).
-See the [release notes](https://github.com/kubernetes-sigs/headlamp/releases) for changes in published versions.
-
-## License
-
-Headlamp is released under the terms of the [Apache 2.0](./LICENSE) license.
-
-## Frequently asked questions
-
-For more information about Headlamp, see the [Headlamp FAQ](https://headlamp.dev/docs/latest/faq/).
+本项目采用[Apache License 2.0](./LICENSE)。
