@@ -6,6 +6,8 @@
 
 在GitHub Actions运行 **Headlamp BBT Release**，输入不含前缀的版本号，例如`0.0.1`。工作流按香港时间生成`v0.0.1-bbt-YYMMDDHHmm`标签，构建镜像并将使用该镜像摘要的`headlamp.yaml`附到Release。同步任务将最新正式版的清单写入GitLab的`bbt-production`分支。Argo CD的`headlamp`应用跟踪该分支的`production`目录。
 
+Headlamp镜像存于私有GHCR包`ghcr.io/bbt-lab/headlamp-bbt`。生产命名空间的`headlamp-ghcr-pull`是镜像拉取Secret，使用有包读取权限的GitHub经典令牌，范围为`read:packages`。令牌到期前更新该Secret。
+
 `headlamp-sync-data`保存Git缓存和临时附件；CronJob通过`Forbid`限制并发。Secret `headlamp-sync-credentials`包含`github-token`和`gitlab-token`：前者具有GitHub仓库Contents只读权限，后者是具有Maintainer角色及`api`、`write_repository`权限的GitLab项目令牌。令牌通过集群Secret管理，不能写入仓库。
 
 生产集群配置可使用`kubectl kustomize deploy/sync`渲染。命名空间和内部根证书ConfigMap由集群管理员单独管理，部署前须准备上述Secret。

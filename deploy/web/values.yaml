@@ -4,8 +4,11 @@
 # 作者：Codex
 # 日期：2026-11-14
 image:
-  registry: harbor.bbt.sspu.edu.cn
-  repository: ghcr/bbt-lab/headlamp-bbt
+  registry: ghcr.io
+  repository: bbt-lab/headlamp-bbt
+
+imagePullSecrets:
+  - name: headlamp-ghcr-pull
 
 config:
   inClusterContextName: prd
