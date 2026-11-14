@@ -109,6 +109,7 @@ spec:
             - name: harbor-auth
               secret:
                 secretName: headlamp-harbor-push
+                optional: true
                 items:
                   - key: .dockerconfigjson
                     path: auth.json

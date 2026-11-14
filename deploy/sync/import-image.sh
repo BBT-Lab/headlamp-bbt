@@ -11,6 +11,11 @@ if [[ ! -f "$archive" ]]; then
     exit 0
 fi
 
+if [[ ! -s /registry-auth/auth.json ]]; then
+    echo '缺少headlamp-harbor-push Secret中的Harbor凭据' >&2
+    exit 1
+fi
+
 tag=$(cat /work/release)
 expected=$(cat /work/headlamp-image.digest)
 source_digest=$(skopeo inspect --raw "oci-archive:$archive" | sha256sum)
