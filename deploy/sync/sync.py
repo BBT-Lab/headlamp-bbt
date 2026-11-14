@@ -115,9 +115,11 @@ def sync_git(token: str) -> None:
     env = os.environ.copy()
     env["GIT_TERMINAL_PROMPT"] = "0"
     credential = base64.b64encode(f"oauth2:{token}".encode()).decode()
-    env["GIT_CONFIG_COUNT"] = "1"
+    env["GIT_CONFIG_COUNT"] = "2"
     env["GIT_CONFIG_KEY_0"] = "http.https://git.bbt.sspu.edu.cn/.extraheader"
     env["GIT_CONFIG_VALUE_0"] = f"Authorization: Basic {credential}"
+    env["GIT_CONFIG_KEY_1"] = "http.https://git.bbt.sspu.edu.cn/.sslCAInfo"
+    env["GIT_CONFIG_VALUE_1"] = CA_FILE
     if not (CACHE / "HEAD").exists():
         subprocess.run(
             ["git", "init", "--bare", "--initial-branch=main", str(CACHE)],

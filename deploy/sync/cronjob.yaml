@@ -44,8 +44,6 @@ spec:
                 - &noProxy
                   name: NO_PROXY
                   value: .bbt.sspu.edu.cn,localhost,127.0.0.1
-                - name: GIT_SSL_CAINFO
-                  value: /registry-certs/ca.crt
               resources: &pythonResources
                 requests:
                   cpu: 250m
