@@ -18,14 +18,13 @@ concurrency:
 
 permissions:
   contents: write
-  packages: write
 
 jobs:
   publish:
     if: github.repository == 'BBT-Lab/headlamp-bbt' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     env:
-      IMAGE: ghcr.io/bbt-lab/headlamp-bbt
+      IMAGE: harbor.bbt.sspu.edu.cn/sspu/headlamp-bbt
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -43,17 +42,13 @@ jobs:
           echo "tag=$tag" >> "$GITHUB_OUTPUT"
           jq -n --arg version "$tag" '{product: {productName: "Headlamp BBT", version: $version}}' > app/bbt-build-manifest.json
       - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.0
-      - uses: docker/login-action@81c6f93d4bc991e510b342a00b419b3bb4efc5c6 # v4.7.0
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
       - uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
-        id: image
         with:
           context: .
           platforms: linux/amd64
-          push: true
+          outputs: type=oci,dest=headlamp-image.oci.tar
+          provenance: false
+          sbom: false
           tags: ${{ env.IMAGE }}:${{ steps.version.outputs.tag }}
           labels: org.opencontainers.image.source=https://github.com/BBT-Lab/headlamp-bbt
           build-args: |
@@ -65,9 +60,14 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAG: ${{ steps.version.outputs.tag }}
-          DIGEST: ${{ steps.image.outputs.digest }}
         run: |
+          DIGEST=$(tar -xOf headlamp-image.oci.tar index.json | jq -er \
+            '.manifests | select(length == 1) | .[0].digest')
+          [[ "$DIGEST" =~ ^sha256:[0-9a-f]{64}$ ]]
+          [[ $(stat -c%s headlamp-image.oci.tar) -lt 2147483648 ]]
+          printf '%s\n' "$DIGEST" > headlamp-image.digest
           helm template headlamp charts/headlamp --namespace headlamp \
             -f deploy/web/values.yaml --set-string "image.tag=$TAG@$DIGEST" > headlamp.yaml
           printf 'Headlamp BBT %s\n\n容器镜像：%s:%s@%s\n' "$TAG" "$IMAGE" "$TAG" "$DIGEST" > release-notes.md
-          gh release create "$TAG" headlamp.yaml --target "$GITHUB_SHA" --title "$TAG" --notes-file release-notes.md
+          gh release create "$TAG" headlamp.yaml deploy/web/kustomization.yaml headlamp-image.oci.tar headlamp-image.digest \
+            --target "$GITHUB_SHA" --title "$TAG" --notes-file release-notes.md
