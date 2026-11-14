@@ -1,0 +1,21 @@
+# 文件描述：根据发布清单生成Headlamp BBT生产资源。
+# 项目名称：Headlamp BBT
+# 文件名称：kustomization.yaml
+# 作者：Codex
+# 日期：2026-11-14
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - headlamp.yaml
+images:
+  - name: harbor.bbt.sspu.edu.cn/ghcr/bbt-lab/headlamp-bbt
+    newName: ghcr.io/bbt-lab/headlamp-bbt
+patches:
+  - target:
+      kind: Deployment
+      name: headlamp
+    patch: |-
+      - op: add
+        path: /spec/template/spec/imagePullSecrets
+        value:
+          - name: headlamp-ghcr-pull
