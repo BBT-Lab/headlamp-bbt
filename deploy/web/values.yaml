@@ -1,0 +1,42 @@
+# 文件描述：Headlamp BBT生产部署的Helm配置。
+# 项目名称：Headlamp BBT
+# 文件名称：values.yaml
+# 作者：Codex
+# 日期：2026-11-14
+image:
+  registry: harbor.bbt.sspu.edu.cn
+  repository: ghcr/bbt-lab/headlamp-bbt
+
+config:
+  inClusterContextName: prd
+  unsafeUseServiceAccountToken: false
+  oidc:
+    secret:
+      create: false
+
+clusterRoleBinding:
+  create: false
+
+resources:
+  requests:
+    cpu: 125m
+    memory: 128Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
+
+ingress:
+  enabled: true
+  ingressClassName: nginx
+  annotations:
+    cert-manager.io/cluster-issuer: step-ca-dns01
+    nginx.ingress.kubernetes.io/ssl-redirect: 'true'
+  hosts:
+    - host: headlamp.bbt.sspu.edu.cn
+      paths:
+        - path: /
+          type: Prefix
+  tls:
+    - secretName: headlamp-tls
+      hosts:
+        - headlamp.bbt.sspu.edu.cn

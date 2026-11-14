@@ -1,0 +1,64 @@
+# 文件描述：定期同步GitHub仓库和Release到GitLab。
+# 项目名称：Headlamp BBT
+# 文件名称：cronjob.yaml
+# 作者：Codex
+# 日期：2026-11-14
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: headlamp-repository-sync
+spec:
+  schedule: '*/15 * * * *'
+  suspend: false
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 2
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 1
+      activeDeadlineSeconds: 1800
+      template:
+        spec:
+          restartPolicy: Never
+          automountServiceAccountToken: false
+          containers:
+            - name: sync
+              image: harbor.bbt.sspu.edu.cn/dockerhub/library/python@sha256:cad37dd20c7cac861af9003af8796d03ea7a998ec1e3a664429740fc9d7d2691
+              command: ['python', '/app/sync.py']
+              env:
+                - name: GITHUB_TOKEN
+                  valueFrom:
+                    secretKeyRef:
+                      name: headlamp-sync-credentials
+                      key: github-token
+                - name: GITLAB_TOKEN
+                  valueFrom:
+                    secretKeyRef:
+                      name: headlamp-sync-credentials
+                      key: gitlab-token
+                - name: HTTPS_PROXY
+                  value: http://192.168.122.1:10810
+                - name: HTTP_PROXY
+                  value: http://192.168.122.1:10810
+                - name: NO_PROXY
+                  value: .bbt.sspu.edu.cn,localhost,127.0.0.1
+              resources:
+                requests:
+                  cpu: 250m
+                  memory: 256Mi
+                limits:
+                  cpu: '1'
+                  memory: 1Gi
+              volumeMounts:
+                - name: code
+                  mountPath: /app
+                  readOnly: true
+                - name: data
+                  mountPath: /data
+          volumes:
+            - name: code
+              configMap:
+                name: headlamp-repository-sync
+            - name: data
+              persistentVolumeClaim:
+                claimName: headlamp-sync-data

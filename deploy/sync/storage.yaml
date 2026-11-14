@@ -1,0 +1,16 @@
+# 文件描述：仓库缓存与发布附件的持久存储。
+# 项目名称：Headlamp BBT
+# 文件名称：storage.yaml
+# 作者：Codex
+# 日期：2026-11-14
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: headlamp-sync-data
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: nfs-client
+  resources:
+    requests:
+      storage: 5Gi

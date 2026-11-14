@@ -1,0 +1,17 @@
+# 文件描述：同步服务的Kubernetes资源集合。
+# 项目名称：Headlamp BBT
+# 文件名称：kustomization.yaml
+# 作者：Codex
+# 日期：2026-11-14
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: headlamp
+resources:
+  - storage.yaml
+  - cronjob.yaml
+configMapGenerator:
+  - name: headlamp-repository-sync
+    files:
+      - sync.py
+generatorOptions:
+  disableNameSuffixHash: true
