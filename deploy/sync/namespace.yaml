@@ -1,0 +1,11 @@
+# 文件描述：Headlamp及版本同步服务的生产命名空间。
+# 项目名称：Headlamp BBT
+# 文件名称：namespace.yaml
+# 作者：Codex
+# 日期：2026-11-14
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: headlamp
+  labels:
+    created_by: rhw

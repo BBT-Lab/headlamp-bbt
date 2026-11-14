@@ -1,0 +1,45 @@
+# 文件描述：Argo CD通过GitLab部署Headlamp BBT。
+# 项目名称：Headlamp BBT
+# 文件名称：argocd.yaml
+# 作者：Codex
+# 日期：2026-11-14
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: headlamp
+  namespace: argocd
+spec:
+  sourceRepos:
+    - https://git.bbt.sspu.edu.cn/Qintsg/headlamp-bbt.git
+  destinations:
+    - server: https://kubernetes.default.svc
+      namespace: headlamp
+  namespaceResourceWhitelist:
+    - group: apps
+      kind: Deployment
+    - group: ''
+      kind: Service
+    - group: ''
+      kind: ServiceAccount
+    - group: networking.k8s.io
+      kind: Ingress
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: headlamp
+  namespace: argocd
+spec:
+  project: headlamp
+  source:
+    repoURL: https://git.bbt.sspu.edu.cn/Qintsg/headlamp-bbt.git
+    targetRevision: refs/heads/bbt-production
+    path: production
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: headlamp
+  syncPolicy:
+    automated:
+      selfHeal: true
+    retry:
+      limit: 5
