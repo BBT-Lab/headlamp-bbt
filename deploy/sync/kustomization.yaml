@@ -13,5 +13,6 @@ configMapGenerator:
   - name: headlamp-repository-sync
     files:
       - sync.py
+      - import-image.sh
 generatorOptions:
   disableNameSuffixHash: true

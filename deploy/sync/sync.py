@@ -9,11 +9,14 @@
 import base64
 import datetime
 import hashlib
+import http.client
 import json
 import os
 import re
 import shutil
+import ssl
 import subprocess
+import sys
 import tempfile
 import urllib.parse
 import urllib.request
@@ -25,9 +28,25 @@ GITLAB = "https://git.bbt.sspu.edu.cn/api/v4/projects/114"
 GITHUB_REPO = "https://github.com/BBT-Lab/headlamp-bbt.git"
 GITLAB_REPO = "https://git.bbt.sspu.edu.cn/Qintsg/headlamp-bbt.git"
 CACHE = Path("/data/repository.git")
+WORK = Path("/work")
+HARBOR = "harbor.bbt.sspu.edu.cn"
+HARBOR_REPOSITORY = "sspu/headlamp-bbt"
+IMAGE_ARCHIVE = "headlamp-image.oci.tar"
+IMAGE_DIGEST = "headlamp-image.digest"
+CA_FILE = "/registry-certs/ca.crt"
 PRODUCTION_BRANCH = "bbt-production"
-PRODUCTION_FILE = "production/headlamp.yaml"
+PRODUCTION_FILES = ("headlamp.yaml", "kustomization.yaml")
 RELEASE_TAG = re.compile(r"v\d+\.\d+\.\d+-bbt-\d{10}")
+
+
+def tls_context() -> ssl.SSLContext:
+    """在系统信任根的基础上加入BBT根证书。
+
+    :return: 同时信任GitHub和BBT服务的TLS上下文。
+    """
+    context = ssl.create_default_context()
+    context.load_verify_locations(cafile=CA_FILE)
+    return context
 
 
 def api(
@@ -51,7 +70,9 @@ def api(
     if payload is not None:
         headers["Content-Type"] = "application/json"
     request = urllib.request.Request(url, data=payload, headers=headers, method=method)
-    with urllib.request.urlopen(request, timeout=120) as response:
+    with urllib.request.urlopen(
+        request, timeout=120, context=tls_context()
+    ) as response:
         return json.load(response)
 
 
@@ -166,7 +187,9 @@ def upload_asset(
             asset["browser_download_url"], headers={"User-Agent": "headlamp-bbt-sync"}
         )
         with (
-            urllib.request.urlopen(request, timeout=300) as response,
+            urllib.request.urlopen(
+                request, timeout=300, context=tls_context()
+            ) as response,
             file_path.open("wb") as file,
         ):
             shutil.copyfileobj(response, file)
@@ -191,7 +214,9 @@ def upload_asset(
                         "Content-Type": "application/octet-stream",
                     },
                 )
-                with urllib.request.urlopen(request, timeout=300) as response:
+                with urllib.request.urlopen(
+                    request, timeout=300, context=tls_context()
+                ) as response:
                     if response.status != 201:
                         raise RuntimeError(
                             f"附件上传失败：{name} HTTP {response.status}"
@@ -199,42 +224,148 @@ def upload_asset(
     return package_url
 
 
-def publish_production(tag: str, asset_url: str, token: str) -> None:
-    """将最新正式版的部署清单发布到Argo CD跟踪的分支。
+def image_available(digest: str) -> bool:
+    """检查集群能否从Harbor匿名读取指定镜像摘要。
+
+    :param digest: OCI镜像摘要。
+    :return: Harbor中已存在该镜像。
+    """
+    query = urllib.parse.urlencode(
+        {"service": "harbor-registry", "scope": f"repository:{HARBOR_REPOSITORY}:pull"}
+    )
+    with urllib.request.urlopen(
+        f"https://{HARBOR}/service/token?{query}", timeout=30, context=tls_context()
+    ) as response:
+        token = json.load(response)["token"]
+    connection = http.client.HTTPSConnection(HARBOR, timeout=30, context=tls_context())
+    try:
+        connection.request(
+            "HEAD",
+            f"/v2/{HARBOR_REPOSITORY}/manifests/{digest}",
+            headers={
+                "Authorization": f"Bearer {token}",
+                "Accept": (
+                    "application/vnd.oci.image.manifest.v1+json,"
+                    "application/vnd.oci.image.index.v1+json"
+                ),
+            },
+        )
+        response = connection.getresponse()
+        if response.status == 404:
+            return False
+        if (
+            response.status != 200
+            or response.getheader("Docker-Content-Digest") != digest
+        ):
+            raise RuntimeError(f"Harbor镜像摘要检查失败：HTTP {response.status}")
+        return True
+    finally:
+        connection.close()
+
+
+def prepare_production(
+    tag: str, links: dict[str, str], archive_checksum: str, token: str
+) -> None:
+    """读取发布清单并准备待导入的OCI归档。
 
     :param tag: 已同步的发布标签。
-    :param asset_url: GitLab软件包中的部署清单地址。
+    :param links: GitLab软件包中各发布附件的地址。
+    :param archive_checksum: GitHub发布附件的SHA-256摘要。
     :param token: GitLab项目令牌。
     :return: 无返回值。
     """
-    request = urllib.request.Request(asset_url, headers={"PRIVATE-TOKEN": token})
-    with urllib.request.urlopen(request, timeout=120) as response:
+    headers = {"PRIVATE-TOKEN": token}
+    request = urllib.request.Request(links[IMAGE_DIGEST], headers=headers)
+    with urllib.request.urlopen(
+        request, timeout=120, context=tls_context()
+    ) as response:
+        digest = response.read().decode("ascii").strip()
+    if not re.fullmatch(r"sha256:[0-9a-f]{64}", digest):
+        raise ValueError(f"镜像摘要无效：{tag}")
+    request = urllib.request.Request(links["headlamp.yaml"], headers=headers)
+    with urllib.request.urlopen(
+        request, timeout=120, context=tls_context()
+    ) as response:
         manifest = response.read()
-    digest = hashlib.sha256(manifest).hexdigest()
+    image = f"{HARBOR}/{HARBOR_REPOSITORY}:{tag}@{digest}".encode()
+    if image not in manifest:
+        raise ValueError(f"部署清单与版本镜像不一致：{tag}")
+    if not image_available(digest):
+        archive = WORK / IMAGE_ARCHIVE
+        request = urllib.request.Request(links[IMAGE_ARCHIVE], headers=headers)
+        with (
+            urllib.request.urlopen(
+                request, timeout=300, context=tls_context()
+            ) as response,
+            archive.open("wb") as output,
+        ):
+            shutil.copyfileobj(response, output)
+        with archive.open("rb") as data:
+            if (
+                f"sha256:{hashlib.file_digest(data, 'sha256').hexdigest()}"
+                != archive_checksum
+            ):
+                raise ValueError(f"GitLab归档摘要与GitHub附件不一致：{tag}")
+    request = urllib.request.Request(links["kustomization.yaml"], headers=headers)
+    with urllib.request.urlopen(
+        request, timeout=120, context=tls_context()
+    ) as response:
+        (WORK / "kustomization.yaml").write_bytes(response.read())
+    (WORK / IMAGE_DIGEST).write_text(digest, encoding="ascii")
+    (WORK / "headlamp.yaml").write_bytes(manifest)
+    (WORK / "release").write_text(tag, encoding="ascii")
+
+
+def publish_production(token: str) -> None:
+    """将最新正式版的部署清单发布到Argo CD跟踪的分支。
+
+    :param token: GitLab项目令牌。
+    :return: 无返回值。
+    """
+    release_file = WORK / "release"
+    if not release_file.is_file():
+        return
+    tag = release_file.read_text(encoding="ascii")
+    image_digest = (WORK / IMAGE_DIGEST).read_text(encoding="ascii")
+    if not image_available(image_digest):
+        raise RuntimeError(f"Harbor缺少正式版镜像：{tag}")
     filter_query = urllib.parse.urlencode({"search": f"^{PRODUCTION_BRANCH}$"})
     branches = pages(f"{GITLAB}/repository/branches?{filter_query}", token)
-    action = {
-        "action": "create",
-        "file_path": PRODUCTION_FILE,
-        "content": base64.b64encode(manifest).decode("ascii"),
-        "encoding": "base64",
-    }
-    body = {
+    body: dict[str, Any] = {
         "branch": PRODUCTION_BRANCH,
         "commit_message": f"deploy: 发布Headlamp BBT {tag}",
-        "actions": [action],
+        "actions": [],
     }
+    existing_paths = set()
     if any(branch["name"] == PRODUCTION_BRANCH for branch in branches):
-        file_path = urllib.parse.quote(PRODUCTION_FILE, safe="")
-        current = api(
-            f"{GITLAB}/repository/files/{file_path}?ref={PRODUCTION_BRANCH}", token
+        tree = pages(
+            f"{GITLAB}/repository/tree?ref={PRODUCTION_BRANCH}&path=production",
+            token,
         )
-        if current["content_sha256"] == digest:
-            return
-        action["action"] = "update"
-        action["last_commit_id"] = current["last_commit_id"]
+        existing_paths = {entry["path"] for entry in tree}
     else:
         body["start_branch"] = "main"
+    for name in PRODUCTION_FILES:
+        path = f"production/{name}"
+        data = (WORK / name).read_bytes()
+        action = {
+            "action": "create",
+            "file_path": path,
+            "content": base64.b64encode(data).decode("ascii"),
+            "encoding": "base64",
+        }
+        if path in existing_paths:
+            file_path = urllib.parse.quote(path, safe="")
+            current = api(
+                f"{GITLAB}/repository/files/{file_path}?ref={PRODUCTION_BRANCH}", token
+            )
+            if current["content_sha256"] == hashlib.sha256(data).hexdigest():
+                continue
+            action["action"] = "update"
+            action["last_commit_id"] = current["last_commit_id"]
+        body["actions"].append(action)
+    if not body["actions"]:
+        return
     api(f"{GITLAB}/repository/commits", token, "POST", body)
     print(f"已更新Argo CD部署分支：{tag}", flush=True)
 
@@ -261,7 +392,8 @@ def sync_releases(github_token: str, gitlab_token: str) -> None:
         key=lambda release: (release["published_at"], release["id"]),
         default=None,
     )
-    production_asset = None
+    production_assets: dict[str, str] = {}
+    archive_checksum = ""
     for release in source:
         if release["draft"]:
             continue
@@ -286,6 +418,10 @@ def sync_releases(github_token: str, gitlab_token: str) -> None:
                     "link_type": "package",
                 }
             )
+            if release is production and asset["name"] == IMAGE_ARCHIVE:
+                archive_checksum = asset["digest"]
+                if not re.fullmatch(r"sha256:[0-9a-f]{64}", archive_checksum):
+                    raise ValueError(f"OCI归档缺少有效的附件摘要：{tag}")
         if tag not in existing:
             api(
                 f"{GITLAB}/releases",
@@ -316,14 +452,11 @@ def sync_releases(github_token: str, gitlab_token: str) -> None:
                     raise ValueError(f"GitLab已有不同地址的同名附件：{link['name']}")
         print(f"Release已同步：{tag}", flush=True)
         if release is production:
-            production_asset = next(
-                (link["url"] for link in links if link["name"] == "headlamp.yaml"),
-                None,
-            )
-    if production is not None:
-        if production_asset is None:
-            raise ValueError(f"正式版缺少部署清单：{production['tag_name']}")
-        publish_production(production["tag_name"], production_asset, gitlab_token)
+            production_assets = {link["name"]: link["url"] for link in links}
+    if production is not None and IMAGE_ARCHIVE in production_assets:
+        prepare_production(
+            production["tag_name"], production_assets, archive_checksum, gitlab_token
+        )
 
 
 def main() -> None:
@@ -331,10 +464,15 @@ def main() -> None:
 
     :return: 无返回值。
     """
-    github_token = os.environ["GITHUB_TOKEN"]
     gitlab_token = os.environ["GITLAB_TOKEN"]
-    sync_git(gitlab_token)
-    sync_releases(github_token, gitlab_token)
+    if len(sys.argv) != 2 or sys.argv[1] not in {"prepare", "publish"}:
+        raise ValueError("请指定prepare或publish")
+    if sys.argv[1] == "prepare":
+        sync_git(gitlab_token)
+        sync_releases(os.environ["GITHUB_TOKEN"], gitlab_token)
+        print("仓库和Release准备完成", flush=True)
+        return
+    publish_production(gitlab_token)
     print("同步完成", flush=True)
 
 

@@ -21,17 +21,18 @@ spec:
         spec:
           restartPolicy: Never
           automountServiceAccountToken: false
-          containers:
-            - name: sync
-              image: harbor.bbt.sspu.edu.cn/dockerhub/library/python@sha256:cad37dd20c7cac861af9003af8796d03ea7a998ec1e3a664429740fc9d7d2691
-              command: ['python', '/app/sync.py']
+          initContainers:
+            - name: prepare
+              image: &pythonImage harbor.bbt.sspu.edu.cn/dockerhub/library/python@sha256:cad37dd20c7cac861af9003af8796d03ea7a998ec1e3a664429740fc9d7d2691
+              command: ['python', '/app/sync.py', 'prepare']
               env:
                 - name: GITHUB_TOKEN
                   valueFrom:
                     secretKeyRef:
                       name: headlamp-sync-credentials
                       key: github-token
-                - name: GITLAB_TOKEN
+                - &gitlabToken
+                  name: GITLAB_TOKEN
                   valueFrom:
                     secretKeyRef:
                       name: headlamp-sync-credentials
@@ -40,8 +41,37 @@ spec:
                   value: http://192.168.122.1:10810
                 - name: HTTP_PROXY
                   value: http://192.168.122.1:10810
-                - name: NO_PROXY
+                - &noProxy
+                  name: NO_PROXY
                   value: .bbt.sspu.edu.cn,localhost,127.0.0.1
+                - name: GIT_SSL_CAINFO
+                  value: /registry-certs/ca.crt
+              resources: &pythonResources
+                requests:
+                  cpu: 250m
+                  memory: 256Mi
+                limits:
+                  cpu: '1'
+                  memory: 1Gi
+              volumeMounts:
+                - &code
+                  name: code
+                  mountPath: /app
+                  readOnly: true
+                - name: data
+                  mountPath: /data
+                - &work
+                  name: work
+                  mountPath: /work
+                - &harborCA
+                  name: harbor-ca
+                  mountPath: /registry-certs
+                  readOnly: true
+            - name: import-image
+              image: harbor.bbt.sspu.edu.cn/quay/skopeo/stable@sha256:9fdeeda2801cf93a0a15bfb2154e44a0c5a0f3650e54586165bd1b732e503702
+              command: ['/bin/bash', '/app/import-image.sh']
+              env:
+                - *noProxy
               resources:
                 requests:
                   cpu: 250m
@@ -50,11 +80,24 @@ spec:
                   cpu: '1'
                   memory: 1Gi
               volumeMounts:
-                - name: code
-                  mountPath: /app
+                - *code
+                - *work
+                - name: harbor-auth
+                  mountPath: /registry-auth
                   readOnly: true
-                - name: data
-                  mountPath: /data
+                - *harborCA
+          containers:
+            - name: sync
+              image: *pythonImage
+              command: ['python', '/app/sync.py', 'publish']
+              env:
+                - *gitlabToken
+                - *noProxy
+              resources: *pythonResources
+              volumeMounts:
+                - *code
+                - *work
+                - *harborCA
           volumes:
             - name: code
               configMap:
@@ -62,3 +105,18 @@ spec:
             - name: data
               persistentVolumeClaim:
                 claimName: headlamp-sync-data
+            - name: work
+              emptyDir:
+                sizeLimit: 5Gi
+            - name: harbor-auth
+              secret:
+                secretName: headlamp-harbor-push
+                items:
+                  - key: .dockerconfigjson
+                    path: auth.json
+            - name: harbor-ca
+              configMap:
+                name: bbt-root-ca
+                items:
+                  - key: roots.pem
+                    path: ca.crt
