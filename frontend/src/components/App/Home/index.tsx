@@ -25,7 +25,8 @@ import { setupBackstageMessageReceiver } from '../../../helpers/backstageMessage
 import { useAutoConnectClusters } from '../../../helpers/clusterAutoConnect';
 import { isBackstage } from '../../../helpers/isBackstage';
 import { isElectron } from '../../../helpers/isElectron';
-import { useClustersConf, useClustersVersion, useVisibleClustersConf } from '../../../lib/k8s';
+import { useClustersConf, useClustersVersion } from '../../../lib/k8s';
+import { useVisibleClustersConf } from '../../../lib/k8s/useClusterPresentation';
 import { Cluster } from '../../../lib/k8s/cluster';
 import { useEventWarningList } from '../../../lib/k8s/event';
 import { createRouteURL } from '../../../lib/router/createRouteURL';

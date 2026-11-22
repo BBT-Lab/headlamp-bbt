@@ -32,7 +32,7 @@ import { uniq } from 'lodash';
 import { ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
 import { useHistory } from 'react-router';
-import { useVisibleClustersConf } from '../../lib/k8s';
+import { useVisibleClustersConf } from '../../lib/k8s/useClusterPresentation';
 import { clusterDisplayName } from '../../lib/k8s/clusterPresentation';
 import { apply } from '../../lib/k8s/api/v1/apply';
 import { ApiError } from '../../lib/k8s/api/v2/ApiError';

@@ -32,7 +32,9 @@ npm run start:bbt-sso
 
 系统环境变量优先于本机文件。`HEADLAMP_CONFIG_RANCHER_URL`配置Rancher地址，集群地址随当前用户的集群列表自动生成。服务只监听`127.0.0.1:4466`。
 
-在浏览器打开`http://localhost:4466/`，从`bbt-sso`入口点击 **Sign in**。登录后返回集群列表，名称附带Rancher集群ID以区分同名集群。
+在浏览器打开`http://localhost:4466/`，从`bbt-sso`入口点击 **登录**。登录后返回集群列表，显示Rancher中的集群原名。
+
+![Headlamp BBT本机单点登录界面](../../docs/development/headlamp-bbt-sso.png)
 
 使用同一账号分别在Headlamp和Rancher检查：
 

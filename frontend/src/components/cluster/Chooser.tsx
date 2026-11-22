@@ -41,7 +41,7 @@ import { useHistory } from 'react-router-dom';
 import { getClusterAppearanceFromMeta } from '../../helpers/clusterAppearance';
 import { isElectron } from '../../helpers/isElectron';
 import { getRecentClusters, setRecentCluster } from '../../helpers/recentClusters';
-import { useVisibleClustersConf } from '../../lib/k8s';
+import { useVisibleClustersConf } from '../../lib/k8s/useClusterPresentation';
 import { clusterDisplayName } from '../../lib/k8s/clusterPresentation';
 import { Cluster } from '../../lib/k8s/cluster';
 import { createRouteURL } from '../../lib/router/createRouteURL';

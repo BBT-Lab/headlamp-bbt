@@ -23,7 +23,6 @@ import { getCluster } from '../cluster';
 import { clusterRequest } from './api/v1/clusterRequests';
 import { ApiError } from './api/v2/ApiError';
 import { Cluster, LabelSelector, StringDict } from './cluster';
-import { clusterDisplayName, visibleClusters } from './clusterPresentation';
 export { ResourceClasses } from './resourceClasses';
 
 /** Hook for getting or fetching the clusters configuration.
@@ -40,28 +39,6 @@ export function useClustersConf(): ConfigState['allClusters'] {
       clusters === null ? null : _.cloneDeep({ ...allClusters, ...clusters, ...statelessClusters }),
     [clusters, allClusters, statelessClusters]
   );
-}
-
-/**
- * 获取当前可用于列表及选择器的集群。
- *
- * :returns: 当前显示的授权集群。
- */
-export function useVisibleClustersConf(): ConfigState['allClusters'] {
-  const clusters = useClustersConf();
-  const showAll = useTypedSelector(state => state.config.showAllClusters ?? false);
-  return useMemo(() => visibleClusters(clusters, showAll), [clusters, showAll]);
-}
-
-/**
- * 将路由使用的集群键转换为界面显示名。
- *
- * :param name: 集群键。
- * :returns: 界面显示名。
- */
-export function useClusterDisplayName(name?: string | null): string {
-  const clusters = useClustersConf();
-  return name ? clusterDisplayName(clusters?.[name], name) : '';
 }
 
 export { useCluster, useConnectApi, useSelectedClusters } from './api/v1/hooks';

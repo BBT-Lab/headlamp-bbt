@@ -32,7 +32,7 @@ import { useDispatch } from 'react-redux';
 import { useHistory } from 'react-router';
 import { FixedSizeList, ListChildComponentProps } from 'react-window';
 import { getAutoConnectClusterNames } from '../../../helpers/clusterAutoConnect';
-import { useVisibleClustersConf } from '../../../lib/k8s';
+import { useVisibleClustersConf } from '../../../lib/k8s/useClusterPresentation';
 import Event, { useEventWarningList } from '../../../lib/k8s/event';
 import { createRouteURL } from '../../../lib/router/createRouteURL';
 import { useTypedSelector } from '../../../redux/hooks';
