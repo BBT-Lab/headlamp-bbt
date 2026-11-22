@@ -14,11 +14,18 @@
  * limitations under the License.
  */
 
+// 文件描述：展示和验证集群设置界面的交互。
+// 项目名称：Headlamp BBT
+// 文件名称：SettingsCluster.stories.tsx
+// 作者：Codex
+// 日期：2026-11-23
+
 import { configureStore } from '@reduxjs/toolkit';
 import { Meta, StoryFn } from '@storybook/react';
-import { screen } from '@testing-library/react';
+import { screen, within } from '@testing-library/react';
 import React from 'react';
 import { expect, userEvent, waitFor } from 'storybook/test';
+import i18next from '../../../i18n/config';
 import { TestContext } from '../../../test';
 import SettingsCluster from './SettingsCluster';
 
@@ -266,19 +273,22 @@ export const ColorPickerValidation: StoryFn = () => {
 };
 
 ColorPickerValidation.play = async () => {
-  // Step 1: Click "Choose Color" to open the ColorPicker dialog
-  const chooseColorButton = await screen.findByRole('button', { name: /Choose Color/i });
+  const chooseColorButton = await screen.findByRole('button', {
+    name: name => name.endsWith(i18next.t('translation|Choose Color')),
+  });
   await userEvent.click(chooseColorButton);
 
-  // Step 2: Enable custom color mode by checking the checkbox
-  const customCheckbox = await screen.findByLabelText(/Use custom color/i);
+  const dialog = within(await screen.findByRole('dialog'));
+  const customCheckbox = await dialog.findByRole('checkbox', {
+    name: name => name === i18next.t('translation|Use custom color'),
+  });
   await userEvent.click(customCheckbox);
 
-  // Step 3: Type an invalid color to trigger inline validation error
-  const customInput = await screen.findByLabelText(/Custom color/i);
+  const customInput = await dialog.findByRole('textbox', {
+    name: name => name === i18next.t('translation|Custom color'),
+  });
   await userEvent.type(customInput, 'not-a-color');
 
-  // The TextField shows error styling and the Apply button is disabled
   await waitFor(() => {
     expect(customInput).toHaveAttribute('aria-invalid', 'true');
   });

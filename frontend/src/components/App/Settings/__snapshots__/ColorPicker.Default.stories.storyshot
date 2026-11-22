@@ -26,12 +26,12 @@
         class="MuiPaper-root MuiPaper-outlined MuiPaper-rounded MuiDialog-paper MuiDialog-paperScrollPaper MuiDialog-paperWidthSm css-1708vl9-MuiPaper-root-MuiDialog-paper"
         role="dialog"
       >
-        <h2
+        <h1
           class="MuiTypography-root MuiTypography-h6 MuiDialogTitle-root css-8yphvn-MuiTypography-root-MuiDialogTitle-root"
           id=":mock-test-id:"
         >
           Choose Accent Color
-        </h2>
+        </h1>
         <div
           class="MuiDialogContent-root css-ypiqx9-MuiDialogContent-root"
         >
