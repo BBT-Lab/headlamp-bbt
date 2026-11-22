@@ -15,6 +15,7 @@
               href="/pods"
               role="button"
               tabindex="0"
+              title="Pods"
             >
               <div
                 class="MuiListItemIcon-root css-1blhdvq-MuiListItemIcon-root"

@@ -14,6 +14,12 @@
  * limitations under the License.
  */
 
+// 文件描述：提供集群主题色选择和输入校验。
+// 项目名称：Headlamp BBT
+// 文件名称：ColorPicker.tsx
+// 作者：Codex
+// 日期：2026-11-23
+
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Checkbox from '@mui/material/Checkbox';
@@ -86,7 +92,7 @@ export default function ColorPicker({
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm">
-      <DialogTitle>{t('translation|Choose Accent Color')}</DialogTitle>
+      <DialogTitle component="h1">{t('translation|Choose Accent Color')}</DialogTitle>
       <DialogContent>
         <Box sx={{ pt: 1 }}>
           <Box display="flex" flexWrap="wrap" gap={1}>

@@ -14,6 +14,12 @@
  * limitations under the License.
  */
 
+// 文件描述：检查公共组件导出是否完整。
+// 项目名称：Headlamp BBT
+// 文件名称：index.test.ts
+// 作者：Codex
+// 日期：2026-11-23
+
 import fs from 'fs';
 import * as AllComps from '.';
 
@@ -30,6 +36,7 @@ const avoidCheck = [
   'DropZoneBox',
   'EventsLifetimeInfo',
   'PasswordForm',
+  'FeatureStageBadge',
   // Internal helper used by the LogViewer/Terminal components. Plugins that
   // want to override terminal colors should set the `terminal` field on the
   // AppTheme they pass to `registerAppTheme(...)` instead.

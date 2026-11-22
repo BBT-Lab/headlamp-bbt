@@ -27,6 +27,7 @@
                     href="/"
                     role="button"
                     tabindex="0"
+                    title="Home"
                   >
                     <div
                       class="MuiListItemIcon-root css-1blhdvq-MuiListItemIcon-root"
@@ -53,6 +54,7 @@
                     href="/notifications"
                     role="button"
                     tabindex="0"
+                    title="Notifications"
                   >
                     <div
                       class="MuiListItemIcon-root css-1blhdvq-MuiListItemIcon-root"
@@ -79,6 +81,7 @@
                     href="/settings/general"
                     role="button"
                     tabindex="0"
+                    title="Settings"
                   >
                     <div
                       class="MuiListItemIcon-root css-1blhdvq-MuiListItemIcon-root"
@@ -118,6 +121,7 @@
                             href="/settings/general"
                             role="button"
                             tabindex="0"
+                            title="General"
                           >
                             <div
                               class="MuiListItemText-root css-tlelie-MuiListItemText-root"
@@ -141,6 +145,7 @@
                             href="/settings/plugins"
                             role="button"
                             tabindex="0"
+                            title="Plugins"
                           >
                             <div
                               class="MuiListItemText-root css-tlelie-MuiListItemText-root"
@@ -164,6 +169,7 @@
                             href="/settings/cluster"
                             role="button"
                             tabindex="0"
+                            title="Cluster"
                           >
                             <div
                               class="MuiListItemText-root css-tlelie-MuiListItemText-root"

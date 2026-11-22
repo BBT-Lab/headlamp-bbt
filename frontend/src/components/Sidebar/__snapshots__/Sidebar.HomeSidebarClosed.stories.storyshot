@@ -28,6 +28,7 @@
                     href="/"
                     role="button"
                     tabindex="-1"
+                    title="Home"
                   >
                     <div
                       aria-label="Home"
@@ -48,6 +49,7 @@
                     href="/notifications"
                     role="button"
                     tabindex="-1"
+                    title="Notifications"
                   >
                     <div
                       aria-label="Notifications"
@@ -68,6 +70,7 @@
                     href="/settings/general"
                     role="button"
                     tabindex="-1"
+                    title="Settings"
                   >
                     <div
                       aria-label="Settings"

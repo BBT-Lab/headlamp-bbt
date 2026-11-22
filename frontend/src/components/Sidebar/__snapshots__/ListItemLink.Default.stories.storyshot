@@ -15,6 +15,7 @@
               href="/dashboard"
               role="button"
               tabindex="0"
+              title="Dashboard"
             >
               <div
                 class="MuiListItemIcon-root css-1blhdvq-MuiListItemIcon-root"

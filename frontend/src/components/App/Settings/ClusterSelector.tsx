@@ -14,22 +14,32 @@
  * limitations under the License.
  */
 
+// 文件描述：在集群设置中按显示名称选择集群。
+// 项目名称：Headlamp BBT
+// 文件名称：ClusterSelector.tsx
+// 作者：Codex
+// 日期：2026-11-23
+
 import { FormControl, InputLabel, MenuItem, Select } from '@mui/material';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { useHistory } from 'react-router-dom';
-import { useClustersConf } from '../../../lib/k8s';
+import type { Cluster } from '../../../lib/k8s/cluster';
 import { clusterDisplayName } from '../../../lib/k8s/clusterPresentation';
 
 export interface ClusterSelectorProps {
   currentCluster?: string;
   clusters: string[];
+  clusterConfig?: Record<string, Cluster> | null;
 }
 
-const ClusterSelector: React.FC<ClusterSelectorProps> = ({ currentCluster = '', clusters }) => {
+const ClusterSelector: React.FC<ClusterSelectorProps> = ({
+  currentCluster = '',
+  clusters,
+  clusterConfig,
+}) => {
   const history = useHistory();
   const { t } = useTranslation('glossary');
-  const clusterConfig = useClustersConf();
 
   return (
     <FormControl variant="outlined" margin="normal" size="small" sx={{ minWidth: 250 }}>
