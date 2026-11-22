@@ -23,6 +23,7 @@ import Tooltip from '@mui/material/Tooltip';
 import { alpha } from '@mui/system/colorManipulator';
 import React from 'react';
 import { Link as RouterLink, LinkProps as RouterLinkProps } from 'react-router-dom';
+import FeatureStageBadge, { type FeatureStage } from '../common/FeatureStageBadge';
 
 const ExpandedIconSize = 20;
 const CollapsedIconSize = 24;
@@ -32,6 +33,7 @@ interface ListItemLinkProps {
   pathname: string;
   search?: string;
   name: string;
+  featureStage?: FeatureStage;
   subtitle?: React.ReactNode;
   tabIndex?: number;
   icon?: IconProps['icon'];
@@ -58,6 +60,7 @@ export default function ListItemLink(props: ListItemLinkProps) {
     search,
     icon,
     name,
+    featureStage,
     iconOnly,
     subtitle,
     hasParent,
@@ -130,6 +133,7 @@ export default function ListItemLink(props: ListItemLinkProps) {
       <ListItemButton
         component={renderLink}
         aria-label={iconOnly ? name : undefined}
+        title={name}
         {...other}
         sx={theme => ({
           color:
@@ -255,7 +259,16 @@ export default function ListItemLink(props: ListItemLinkProps) {
         {listItemLinkContainer}
         {!iconOnly && (
           <ListItemText
-            primary={primary}
+            primary={
+              featureStage ? (
+                <>
+                  {primary}
+                  <FeatureStageBadge stage={featureStage} />
+                </>
+              ) : (
+                primary
+              )
+            }
             secondary={subtitle}
             secondaryTypographyProps={
               typeof subtitle === 'string' ? { sx: { whiteSpace: 'pre' } } : undefined

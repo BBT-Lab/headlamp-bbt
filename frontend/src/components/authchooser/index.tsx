@@ -14,6 +14,14 @@
  * limitations under the License.
  */
 
+/*
+ * 文件描述：显示集群登录方式并发起Rancher单点登录。
+ * 项目名称：Headlamp BBT
+ * 文件名称：index.tsx
+ * 作者：Codex
+ * 日期：2026-11-22
+ */
+
 import { InlineIcon } from '@iconify/react';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
@@ -25,6 +33,7 @@ import { generatePath, useHistory, useLocation } from 'react-router-dom';
 import { getAppUrl } from '../../helpers/getAppUrl';
 import { getCluster, getClusterPrefixedPath } from '../../lib/cluster';
 import { useClustersConf } from '../../lib/k8s';
+import { clusterDisplayName } from '../../lib/k8s/clusterPresentation';
 import { testAuth } from '../../lib/k8s/api/v1/clusterApi';
 import { invalidateClusterUserInfo } from '../../lib/queryClient';
 import { createRouteURL } from '../../lib/router/createRouteURL';
@@ -70,6 +79,8 @@ function AuthChooser({ children }: AuthChooserProps) {
     {}) as ReactRouterLocationStateIface;
   const clusterName = getCluster() as string;
   const oidcAutoLogin = useTypedSelector(state => state.config.oidcAutoLogin);
+  const rancherSSO = clusters?.[clusterName]?.meta_data?.rancherSSO === true;
+  const displayClusterName = clusterDisplayName(clusters?.[clusterName], clusterName);
   const { t } = useTranslation();
   const clustersRef = React.useRef<typeof clusters>(null);
   const cancelledRef = React.useRef(false);
@@ -264,18 +275,21 @@ function AuthChooser({ children }: AuthChooserProps) {
       clusterName={clusterName}
       testingTitle={
         numClusters > 1
-          ? t('Getting auth info: {{ clusterName }}', { clusterName })
+          ? t('Getting auth info: {{ clusterName }}', { clusterName: displayClusterName })
           : t('Getting auth info')
       }
       testingAuth={testingAuth}
       title={
         numClusters > 1
-          ? t('Authentication: {{ clusterName }}', { clusterName })
+          ? t('Authentication: {{ clusterName }}', { clusterName: displayClusterName })
           : t('Authentication')
       }
       error={error}
-      oauthUrl={`${getAppUrl()}oidc?dt=${Date()}&cluster=${getCluster()}&popup=true`}
+      oauthUrl={`${getAppUrl()}oidc?cluster=${encodeURIComponent(clusterName)}${
+        rancherSSO ? '' : '&popup=true'
+      }`}
       clusterAuthType={clusterAuthType}
+      rancherSSO={rancherSSO}
       oidcTokenRejected={oidcTokenRejected}
       handleTryAgain={runTestAuthAgain}
       handleOidcAuth={() => {
@@ -319,6 +333,7 @@ export interface PureAuthChooserProps {
   error: Error | null;
   oauthUrl: string;
   clusterAuthType: string;
+  rancherSSO?: boolean;
   oidcTokenRejected?: boolean;
   handleOidcAuth: () => void;
   handleTokenAuth: () => void;
@@ -335,6 +350,7 @@ export function PureAuthChooser({
   error,
   oauthUrl,
   clusterAuthType,
+  rancherSSO,
   oidcTokenRejected,
   handleOidcAuth,
   handleTokenAuth,
@@ -365,7 +381,7 @@ export function PureAuthChooser({
           </DialogTitle>
           {!error ? (
             <Box display="flex" flexDirection="column" alignItems="center">
-              {clusterAuthType === 'oidc' && oidcTokenRejected ? (
+              {!rancherSSO && clusterAuthType === 'oidc' && oidcTokenRejected ? (
                 <Box m={2}>
                   <Empty>
                     {t(
@@ -376,19 +392,25 @@ export function PureAuthChooser({
               ) : null}
               {clusterAuthType === 'oidc' ? (
                 <Box m={2}>
-                  <OauthPopup
-                    onCode={handleOidcAuth}
-                    url={oauthUrl}
-                    title={t('Headlamp Cluster Authentication')}
-                    button={ColorButton as typeof Button}
-                  >
-                    {t('Sign In') as string}
-                  </OauthPopup>
+                  {rancherSSO ? (
+                    <ColorButton href={oauthUrl}>{t('Sign In')}</ColorButton>
+                  ) : (
+                    <OauthPopup
+                      onCode={handleOidcAuth}
+                      url={oauthUrl}
+                      title={t('Headlamp Cluster Authentication')}
+                      button={ColorButton as typeof Button}
+                    >
+                      {t('Sign In') as string}
+                    </OauthPopup>
+                  )}
                 </Box>
               ) : null}
-              <Box m={2}>
-                <ColorButton onClick={handleTokenAuth}>{t('Use A Token')}</ColorButton>
-              </Box>
+              {!rancherSSO && (
+                <Box m={2}>
+                  <ColorButton onClick={handleTokenAuth}>{t('Use A Token')}</ColorButton>
+                </Box>
+              )}
               <Box m={2} textAlign="center">
                 <Link routeName="settingsClusterHomeContext" search={{ c: clusterName }}>
                   {t('translation|Cluster settings')}

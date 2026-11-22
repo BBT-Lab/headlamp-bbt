@@ -15,6 +15,7 @@
  */
 
 import { useClustersConf } from '../../../lib/k8s';
+import { clusterDisplayName } from '../../../lib/k8s/clusterPresentation';
 
 /**
  * Gets the names of the clusters from the clusters configuration.
@@ -32,5 +33,5 @@ export function getCustomClusterNames(clusters: ReturnType<typeof useClustersCon
       ...c,
       name: c.meta_data?.extensions?.headlamp_info?.customName || c.name,
     }))
-    .sort((a, b) => a.name.localeCompare(b.name));
+    .sort((a, b) => clusterDisplayName(a).localeCompare(clusterDisplayName(b)));
 }

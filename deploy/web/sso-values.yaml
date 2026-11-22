@@ -1,0 +1,48 @@
+# 文件描述：启用BBT单点登录的Headlamp生产部署配置。
+# 项目名称：Headlamp BBT
+# 文件名称：sso-values.yaml
+# 作者：Codex
+# 日期：2026-11-19
+automountServiceAccountToken: false
+replicaCount: 1
+
+config:
+  inClusterContextName: bbt-sso
+  sessionTTL: 86400
+
+env:
+  - name: HEADLAMP_CONFIG_OIDC_CLIENT_ID
+    valueFrom:
+      secretKeyRef:
+        name: headlamp-bbt-sso
+        key: client-id
+  - name: HEADLAMP_CONFIG_OIDC_CLIENT_SECRET
+    valueFrom:
+      secretKeyRef:
+        name: headlamp-bbt-sso
+        key: client-secret
+  - name: HEADLAMP_CONFIG_OIDC_IDP_ISSUER_URL
+    value: https://rancher.bbt.sspu.edu.cn/oidc
+  - name: HEADLAMP_CONFIG_RANCHER_URL
+    value: https://rancher.bbt.sspu.edu.cn
+  - name: HEADLAMP_CONFIG_OIDC_CALLBACK_URL
+    value: https://headlamp.bbt.sspu.edu.cn/oidc-callback
+  - name: HEADLAMP_CONFIG_OIDC_SCOPES
+    value: profile,offline_access
+  - name: HEADLAMP_CONFIG_OIDC_USE_COOKIE
+    value: 'true'
+  - name: HEADLAMP_CONFIG_OIDC_USE_ACCESS_TOKEN
+    value: 'true'
+  - name: HEADLAMP_CONFIG_OIDC_USE_PKCE
+    value: 'true'
+  - name: HEADLAMP_CONFIG_OIDC_CA_FILE
+    value: /etc/rancher-ca/ca.pem
+
+volumes:
+  - name: rancher-ca
+    configMap:
+      name: headlamp-rancher-ca
+volumeMounts:
+  - name: rancher-ca
+    mountPath: /etc/rancher-ca
+    readOnly: true

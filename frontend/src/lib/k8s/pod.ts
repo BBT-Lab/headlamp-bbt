@@ -21,6 +21,7 @@ import { stream } from './api/v1/streamingApi';
 import type { KubeCondition, KubeContainer, KubeContainerStatus, Time } from './cluster';
 import type { KubeObjectInterface } from './KubeObject';
 import { KubeObject } from './KubeObject';
+import { isDeadlineCompletion } from './podDisplayPhase';
 import type { WorkloadHealthCategory } from './Workload';
 
 /** Container waiting/terminated reasons that represent a genuine failure rather than normal startup. */
@@ -621,7 +622,7 @@ class Pod extends KubeObject<KubePod> {
       restarts,
       totalContainers,
       readyContainers,
-      reason,
+      reason: isDeadlineCompletion(this) ? 'Completed' : reason,
       lastRestartDate,
       message,
     };
@@ -643,6 +644,9 @@ class Pod extends KubeObject<KubePod> {
    * transitional rather than failures.
    */
   getHealth(): WorkloadHealthCategory {
+    if (isDeadlineCompletion(this)) {
+      return 'healthy';
+    }
     // A lost node is reported as Unknown (unhealthy), matching getDetailedStatus.
     if (this.metadata.deletionTimestamp) {
       return this.status?.reason === 'NodeLost' ? 'failed' : 'transitional';

@@ -15,13 +15,14 @@
  */
 
 import { useTranslation } from 'react-i18next';
-import { useClustersConf } from '../../../lib/k8s';
+import { useVisibleClustersConf } from '../../../lib/k8s';
+import { clusterDisplayName } from '../../../lib/k8s/clusterPresentation';
 import Link from '../../common/Link';
 import SectionBox from '../../common/SectionBox';
 import SimpleTable from '../../common/SimpleTable';
 
 export default function SettingsClusters() {
-  const clusterConf = useClustersConf();
+  const clusterConf = useVisibleClustersConf();
   const { t } = useTranslation(['translation']);
 
   return (
@@ -32,7 +33,7 @@ export default function SettingsClusters() {
             label: t('translation|Name'),
             getter: cluster => (
               <Link routeName="settingsCluster" params={{ cluster: cluster.name }}>
-                {cluster.name}
+                {clusterDisplayName(cluster)}
               </Link>
             ),
           },

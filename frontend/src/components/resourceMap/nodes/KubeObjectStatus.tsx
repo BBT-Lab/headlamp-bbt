@@ -16,6 +16,7 @@
 
 import { KubeObject, Workload } from '../../../lib/k8s/cluster';
 import Pod from '../../../lib/k8s/pod';
+import { podDisplayPhase } from '../../../lib/k8s/podDisplayPhase';
 import { getReadyReplicas, getTotalReplicas } from '../../../lib/util';
 import type { GraphNode } from '../graph/graphModel';
 
@@ -26,7 +27,7 @@ export type KubeObjectStatus = 'error' | 'success' | 'warning';
  * Status is determined based on phase and conditions
  */
 function getPodStatus(pod: Pod): KubeObjectStatus {
-  const phase = pod.status.phase;
+  const phase = podDisplayPhase(pod);
 
   if (phase === 'Failed') {
     return 'error';

@@ -294,7 +294,7 @@ export function useGetAllSources(): GraphSource[] {
         ? [
             {
               id: 'gateway-beta',
-              label: 'Gateway (beta)',
+              label: 'Gateway',
               icon: (
                 <Icon
                   icon="mdi:lan-connect"

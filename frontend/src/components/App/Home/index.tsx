@@ -15,19 +15,22 @@
  */
 
 import { Icon } from '@iconify/react';
-import { Box, Tab, Tabs, Typography } from '@mui/material';
+import { Box, Button, Tab, Tabs, Typography } from '@mui/material';
 import { isEqual } from 'lodash';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
+import { useDispatch } from 'react-redux';
 import { useHistory, useLocation } from 'react-router-dom';
 import { setupBackstageMessageReceiver } from '../../../helpers/backstageMessageReceiver';
 import { useAutoConnectClusters } from '../../../helpers/clusterAutoConnect';
 import { isBackstage } from '../../../helpers/isBackstage';
 import { isElectron } from '../../../helpers/isElectron';
-import { useClustersConf, useClustersVersion } from '../../../lib/k8s';
+import { useClustersConf, useClustersVersion, useVisibleClustersConf } from '../../../lib/k8s';
 import { Cluster } from '../../../lib/k8s/cluster';
 import { useEventWarningList } from '../../../lib/k8s/event';
 import { createRouteURL } from '../../../lib/router/createRouteURL';
+import { setShowAllClusters } from '../../../redux/configSlice';
+import { useTypedSelector } from '../../../redux/hooks';
 import { PageGrid } from '../../common/Resource';
 import SectionBox from '../../common/SectionBox';
 import { useLocalStorageState } from '../../globalSearch/useLocalStorageState';
@@ -40,9 +43,13 @@ import RecentClusters from './RecentClusters';
 export default function Home() {
   const history = useHistory();
   const location = useLocation();
-  const clusters = useClustersConf();
+  const authorizedClusters = useClustersConf();
+  const clusters = useVisibleClustersConf();
+  const hasHiddenClusters = Object.values(authorizedClusters || {}).some(
+    cluster => cluster.meta_data?.hideByDefault === true
+  );
 
-  if (!isElectron() && clusters && Object.keys(clusters).length === 1) {
+  if (!hasHiddenClusters && !isElectron() && clusters && Object.keys(clusters).length === 1) {
     const cluster = Object.keys(clusters)[0];
     const isLogout = new URLSearchParams(location.search).get('logout') === 'true';
     if (isLogout) {
@@ -56,6 +63,7 @@ export default function Home() {
   return (
     <HomeComponent
       clusters={clusters}
+      hasHiddenClusters={hasHiddenClusters}
       // Key forces a remount when the cluster list changes so HomeComponent
       // re-evaluates which clusters to connect. On-demand connected clusters
       // are preserved across remounts via sessionStorage in useAutoConnectClusters.
@@ -71,6 +79,7 @@ export default function Home() {
 
 interface HomeComponentProps {
   clusters: { [name: string]: Cluster } | null;
+  hasHiddenClusters?: boolean;
 }
 
 const maxWarnings = 50;
@@ -127,7 +136,9 @@ function HomeComponent(props: HomeComponentProps) {
     'home-tab-view',
     'clusters'
   );
-  const { clusters } = props;
+  const { clusters, hasHiddenClusters } = props;
+  const dispatch = useDispatch();
+  const showAll = useTypedSelector(state => state.config.showAllClusters ?? false);
   const [customNameClusters, setCustomNameClusters] = React.useState(
     getCustomClusterNames(clusters)
   );
@@ -201,7 +212,7 @@ function HomeComponent(props: HomeComponentProps) {
   );
 
   return (
-    <PageGrid>
+    <PageGrid sx={hasHiddenClusters && view === 'clusters' ? { pb: 9 } : undefined}>
       <SectionBox title={t('Home')} headerProps={{ headerStyle: 'main' }}>
         <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 2 }}>
           <Tabs value={view} onChange={(_, newView) => setView(() => newView)}>
@@ -236,7 +247,33 @@ function HomeComponent(props: HomeComponentProps) {
           </Tabs>
         </Box>
 
-        {view === 'clusters' && memoizedComponent}
+        {view === 'clusters' && (
+          <>
+            {hasHiddenClusters && clusters && Object.keys(clusters).length === 0 && !showAll ? (
+              <Typography color="text.secondary" sx={{ py: 3 }}>
+                {t('No clusters in the default view')}
+              </Typography>
+            ) : (
+              memoizedComponent
+            )}
+            {hasHiddenClusters && (
+              <Button
+                variant="outlined"
+                aria-pressed={showAll}
+                onClick={() => dispatch(setShowAllClusters(!showAll))}
+                sx={{
+                  position: 'fixed',
+                  insetInlineEnd: { xs: 16, sm: 24 },
+                  bottom: { xs: 16, sm: 24 },
+                  zIndex: theme => theme.zIndex.fab,
+                  backgroundColor: 'background.paper',
+                }}
+              >
+                {showAll ? t('Show default clusters') : t('Show all clusters')}
+              </Button>
+            )}
+          </>
+        )}
         {view === 'projects' && <ProjectList />}
       </SectionBox>
     </PageGrid>

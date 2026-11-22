@@ -14,6 +14,12 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+// 文件描述：Headlamp的BBT单点登录与用户权限适配。
+// 项目名称：Headlamp BBT
+// 文件名称：auth.go
+// 作者：Codex
+// 日期：2026-11-19
+
 package auth
 
 import (
@@ -741,7 +747,12 @@ func setRefreshedIDTokenCookie(
 	}
 }
 
-func refreshedTokenString(newToken *oauth2.Token, useAccessToken bool) (string, error) {
+// OIDCUserToken按集群认证配置选择用于API调用的令牌。
+//
+// :param newToken: OAuth2客户端返回的令牌。
+// :param useAccessToken: 是否选择访问令牌。
+// :returns: 所选令牌或缺失字段错误。
+func OIDCUserToken(newToken *oauth2.Token, useAccessToken bool) (string, error) {
 	if useAccessToken {
 		if newToken.AccessToken != "" {
 			return newToken.AccessToken, nil
@@ -750,7 +761,7 @@ func refreshedTokenString(newToken *oauth2.Token, useAccessToken bool) (string, 
 		return idToken, nil
 	}
 
-	return "", errors.New("refreshed token missing expected field")
+	return "", errors.New("OIDC response missing configured user token")
 }
 
 // RefreshAndSetToken refreshes an expiring token, updates the auth cookie,
@@ -792,7 +803,7 @@ func RefreshAndSetToken(params RefreshAndSetTokenParams) {
 		return
 	}
 
-	newTokenString, err := refreshedTokenString(newToken, params.OIDCUseAccessToken)
+	newTokenString, err := OIDCUserToken(newToken, params.OIDCUseAccessToken)
 	if err != nil {
 		logger.Log(logger.LevelError, map[string]string{clusterLogField: params.Cluster},
 			err, "failed to extract token string")

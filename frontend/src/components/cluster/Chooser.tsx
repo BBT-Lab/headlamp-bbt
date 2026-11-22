@@ -41,7 +41,8 @@ import { useHistory } from 'react-router-dom';
 import { getClusterAppearanceFromMeta } from '../../helpers/clusterAppearance';
 import { isElectron } from '../../helpers/isElectron';
 import { getRecentClusters, setRecentCluster } from '../../helpers/recentClusters';
-import { useClustersConf } from '../../lib/k8s';
+import { useVisibleClustersConf } from '../../lib/k8s';
+import { clusterDisplayName } from '../../lib/k8s/clusterPresentation';
 import { Cluster } from '../../lib/k8s/cluster';
 import { createRouteURL } from '../../lib/router/createRouteURL';
 import { useShortcut } from '../../lib/useShortcut';
@@ -125,6 +126,12 @@ export function ClusterTitle(props: ClusterTitleProps) {
           }}
           cluster={cluster}
           selectedClusters={selectedClusters}
+          clusterDisplayNames={Object.fromEntries(
+            Object.entries(clusters || {}).map(([name, config]) => [
+              name,
+              clusterDisplayName(config, name),
+            ])
+          )}
           icon={getClusterAppearanceFromMeta(cluster).icon}
           accentColor={getClusterAppearanceFromMeta(cluster).accentColor}
         />
@@ -162,7 +169,7 @@ const ClusterButton = React.forwardRef<HTMLButtonElement, ClusterButtonProps>((p
           }}
         >
           <Icon icon={icon} width="50" height="50" color={iconColor} />
-          <LightTooltip title={cluster.name}>
+          <LightTooltip title={clusterDisplayName(cluster)}>
             <Typography
               color="textSecondary"
               gutterBottom
@@ -173,7 +180,7 @@ const ClusterButton = React.forwardRef<HTMLButtonElement, ClusterButtonProps>((p
                 display: 'block',
               }}
             >
-              {cluster.name}
+              {clusterDisplayName(cluster)}
             </Typography>
           </LightTooltip>
         </CardContent>
@@ -392,7 +399,7 @@ export function ClusterDialog(props: ClusterDialogProps) {
 
 function Chooser(props: ClusterDialogProps) {
   const history = useHistory();
-  const clusters = useClustersConf();
+  const clusters = useVisibleClustersConf();
   const { open = null, onClose, children = [], ...otherProps } = props;
   // Only used if open is not provided
   const [show, setShow] = React.useState(props.open);

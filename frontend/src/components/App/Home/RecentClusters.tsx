@@ -27,6 +27,7 @@ import { isElectron } from '../../../helpers/isElectron';
 import { getRecentClusters, setRecentCluster } from '../../../helpers/recentClusters';
 import { formatClusterPathParam, getClusterPrefixedPath } from '../../../lib/cluster';
 import { Cluster } from '../../../lib/k8s/cluster';
+import { clusterDisplayName } from '../../../lib/k8s/clusterPresentation';
 import { createRouteURL } from '../../../lib/router/createRouteURL';
 import { MULTI_HOME_ENABLED } from './config';
 import SquareButton from './SquareButton';
@@ -51,7 +52,7 @@ const ClusterButton = React.forwardRef<HTMLButtonElement, ClusterButtonProps>((p
       focusRipple
       icon={icon}
       iconColor={appearance.accentColor}
-      label={cluster.name}
+      label={clusterDisplayName(cluster)}
       ref={ref}
       onClick={onClick}
     />
@@ -165,7 +166,7 @@ export default function RecentClusters(props: RecentClustersProps) {
           >
             {recentClusters.map(cluster => (
               <ToggleButton key={cluster.name} value={cluster}>
-                {cluster.name}
+                {clusterDisplayName(cluster)}
               </ToggleButton>
             ))}
           </ToggleButtonGroup>

@@ -36,7 +36,7 @@ IMAGE_DIGEST = "headlamp-image.digest"
 CA_FILE = "/registry-certs/ca.crt"
 PRODUCTION_BRANCH = "bbt-production"
 PRODUCTION_FILES = ("headlamp.yaml", "kustomization.yaml")
-RELEASE_TAG = re.compile(r"v\d+\.\d+\.\d+-bbt-\d{10}")
+RELEASE_TAG = re.compile(r"v[0-9]+\.[0-9]+\.[0-9]+(?:\.bbt\.[1-9][0-9]*|-bbt)-[0-9]{10}")
 
 
 def tls_context() -> ssl.SSLContext:

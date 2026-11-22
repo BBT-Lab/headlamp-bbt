@@ -32,7 +32,8 @@ import { uniq } from 'lodash';
 import { ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
 import { useHistory } from 'react-router';
-import { useClustersConf } from '../../lib/k8s';
+import { useVisibleClustersConf } from '../../lib/k8s';
+import { clusterDisplayName } from '../../lib/k8s/clusterPresentation';
 import { apply } from '../../lib/k8s/api/v1/apply';
 import { ApiError } from '../../lib/k8s/api/v2/ApiError';
 import { KubeObjectInterface } from '../../lib/k8s/KubeObject';
@@ -117,7 +118,8 @@ function ProjectFromExistingNamespace({ onBack }: { onBack: () => void }) {
   const [isCreating, setIsCreating] = useState(false);
   const [error, setError] = useState<ApiError>();
 
-  const clusters = Object.values(useClustersConf() ?? {});
+  const clusterConfig = useVisibleClustersConf() ?? {};
+  const clusters = Object.values(clusterConfig);
   const { items: namespaces } = Namespace.useList({
     clusters: selectedClusters,
   });
@@ -292,6 +294,7 @@ function ProjectFromExistingNamespace({ onBack }: { onBack: () => void }) {
           fullWidth
           multiple
           options={clusters.map(it => it.name)}
+          getOptionLabel={name => clusterDisplayName(clusterConfig[name], name)}
           value={selectedClusters}
           onChange={(e, newValue) => {
             setSelectedClusters(newValue);

@@ -25,6 +25,7 @@ import { ApiError } from '../../lib/k8s/api/v2/ApiError';
 import { DEFAULT_LIST_LIMIT } from '../../lib/k8s/api/v2/useKubeObjectList';
 import { KubeContainerStatus } from '../../lib/k8s/cluster';
 import Pod from '../../lib/k8s/pod';
+import { isDeadlineCompletion, podDisplayPhase } from '../../lib/k8s/podDisplayPhase';
 import { METRIC_REFETCH_INTERVAL_MS, PodMetrics } from '../../lib/k8s/PodMetrics';
 import { parseCpu, parseRam, unparseCpu, unparseRam } from '../../lib/units';
 import { localeDate, timeAgo } from '../../lib/util';
@@ -40,7 +41,7 @@ import { TooltipIcon } from '../common/Tooltip';
 import LightTooltip from '../common/Tooltip/TooltipLight';
 
 function getPodStatus(pod: Pod) {
-  const phase = pod.status?.phase;
+  const phase = podDisplayPhase(pod);
   let status: StatusLabelProps['status'] = '';
 
   if (phase === 'Failed') {
@@ -103,7 +104,7 @@ export function makePodStatusLabel(pod: Pod, showContainerStatus: boolean, t: TF
             {(status === 'warning' || status === 'error') && (
               <Icon aria-label="hidden" icon="mdi:alert-outline" width="1.2rem" height="1.2rem" />
             )}
-            {reason}
+            {isDeadlineCompletion(pod) ? t('Completed') : reason}
           </StatusLabel>
         </Box>
       </LightTooltip>
@@ -358,7 +359,7 @@ export function PodListRenderer(props: PodListProps) {
           getValue: pod => {
             const status = pod.getDetailedStatus();
             const readyCondition = (pod.status?.conditions || []).find(c => c.type === 'Ready');
-            const phase = pod.status?.phase || '';
+            const phase = podDisplayPhase(pod) || '';
             return `${phase}:${status.reason}:${readyCondition?.status ?? ''}`;
           },
           render: pod => makePodStatusLabel(pod, true, t),

@@ -19,7 +19,9 @@ Headlamp支持查看和管理Kubernetes资源、查看容器日志、使用终�
 ```bash
 npm install
 npm run frontend:install
+npm run bbt:plugins:install
 npm run backend:build
+npm run bbt:plugins:build
 npm start
 ```
 
@@ -33,9 +35,19 @@ npm run backend:test
 
 更多说明见[开发指南](./docs/development/index.md)、[前端开发](./docs/development/frontend.md)、[后端开发](./docs/development/backend.md)和[插件开发](./docs/development/plugins/index.md)。
 
+新浏览器默认使用简体中文（中英双语），资源术语保留英文，例如「命名空间 (Namespace)」。可在设置中切换到简体中文或英语。BBT镜像包含适配后的Headlamp Plus，提供集群、工作负载和命名空间概览。
+
+## BBT单点登录
+
+BBT单点登录通过Rancher OIDC沿用现有账号，自动发现当前用户可访问的全部集群。集群请求使用当前用户的身份，由Rancher校验原有权限。
+
+本机使用`npm run start:bbt-sso`启动网页，访问`http://localhost:4466/`。Client ID和Client Secret通过环境变量提供，本机配置文件`.env.bbt-sso.local`已加入Git与构建忽略规则。应用注册、环境变量和验证步骤见[SSO配置说明](./deploy/web/SSO.md)。
+
 ## 发布与部署
 
 每次发布新版本时，在GitHub和GitLab发布相同版本，通过GitLab的GitOps配置和Argo CD将网页部署到[headlamp.bbt.sspu.edu.cn](https://headlamp.bbt.sspu.edu.cn)。
+
+版本标签格式为`v{上游版本号}.bbt.{序号}-YYMMDDHHmm`。同一上游版本的序号从1开始递增，时间使用香港时区。GitHub发布工作流自动生成标签。
 
 ## 许可证
 

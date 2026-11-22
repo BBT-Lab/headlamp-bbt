@@ -14,6 +14,12 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+// 文件描述：Headlamp的BBT单点登录与用户权限适配。
+// 项目名称：Headlamp BBT
+// 文件名称：multiplexer.go
+// 作者：Codex
+// 日期：2026-11-19
+
 package main
 
 import (
@@ -138,6 +144,8 @@ type Multiplexer struct {
 	saTokenCache map[string]saTokenCacheEntry
 	// saTokenMu guards saTokenCache.
 	saTokenMu sync.RWMutex
+	// sessionToken在Rancher模式下按后端会话验证集群访问并刷新令牌。
+	sessionToken func(cluster, sessionKey string) (string, error)
 }
 
 // saTokenCacheEntry caches a service account token alongside the source file's mtime.
@@ -451,6 +459,9 @@ func (m *Multiplexer) getClusterConfigWithFallback(clusterID, userID string) (*r
 }
 
 func (m *Multiplexer) getClusterContextWithFallback(clusterID, userID string) (*kubeconfig.Context, error) {
+	if m.sessionToken != nil {
+		return m.getClusterContext(statelessContextKey(clusterID, userID))
+	}
 	// Try to get config for stateful cluster first.
 	clusterContext, err := m.getClusterContext(clusterID)
 	if err != nil {
@@ -568,6 +579,17 @@ func (m *Multiplexer) monitorConnection(conn *Connection) {
 
 			return
 		case <-heartbeat.C:
+			if m.sessionToken != nil {
+				token, err := m.sessionToken(conn.ClusterID, conn.UserID)
+				if err != nil {
+					conn.safeClose()
+					return
+				}
+				if err := m.refreshConnectionToken(conn, &token); err != nil {
+					conn.safeClose()
+					return
+				}
+			}
 			if err := conn.WSConn.WriteMessage(websocket.PingMessage, nil); err != nil {
 				conn.updateStatus(StateError, fmt.Errorf("heartbeat failed: %w", err))
 
@@ -591,13 +613,23 @@ func (m *Multiplexer) reconnect(conn *Connection) (*Connection, error) {
 		_ = conn.WSConn.Close()
 	}
 
+	conn.mu.RLock()
+	token := conn.Token
+	conn.mu.RUnlock()
+	if m.sessionToken != nil {
+		current, err := m.sessionToken(conn.ClusterID, conn.UserID)
+		if err != nil {
+			return nil, err
+		}
+		token = &current
+	}
 	newConn, err := m.establishClusterConnection(
 		conn.ClusterID,
 		conn.UserID,
 		conn.Path,
 		conn.Query,
 		conn.Client,
-		conn.Token,
+		token,
 	)
 	if err != nil {
 		logger.Log(logger.LevelError, map[string]string{logFieldClusterID: conn.ClusterID}, err, "reconnecting to cluster")
@@ -663,6 +695,23 @@ func (m *Multiplexer) processClientMessage(
 	lockClientConn *WSConnLock,
 	msg Message,
 ) {
+	var token string
+	var err error
+	if m.sessionToken != nil {
+		identity, identityErr := requestRancherIdentity(r)
+		if identityErr != nil {
+			m.sendClientError(lockClientConn, msg.ClusterID, msg.Path, msg.Query, msg.UserID, identityErr)
+			return
+		}
+		msg.UserID = identity.SessionKey
+		token, err = m.sessionToken(msg.ClusterID, msg.UserID)
+	} else {
+		token, err = auth.GetTokenFromCookie(r, msg.ClusterID)
+	}
+	if err != nil {
+		m.sendClientError(lockClientConn, msg.ClusterID, msg.Path, msg.Query, msg.UserID, err)
+		return
+	}
 	// Check if it's a close message
 	if msg.Type == "CLOSE" {
 		m.CloseConnection(msg.ClusterID, msg.Path, msg.UserID)
@@ -679,14 +728,6 @@ func (m *Multiplexer) processClientMessage(
 			msg.UserID,
 			fmt.Errorf("unsupported message type: %s", msg.Type),
 		)
-
-		return
-	}
-
-	token, err := auth.GetTokenFromCookie(r, msg.ClusterID)
-	if err != nil {
-		logger.Log(logger.LevelError, map[string]string{logFieldClusterID: msg.ClusterID}, err, "getting token from cookie")
-		m.sendClientError(lockClientConn, msg.ClusterID, msg.Path, msg.Query, msg.UserID, err)
 
 		return
 	}

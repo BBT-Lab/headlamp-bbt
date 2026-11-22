@@ -1,3 +1,9 @@
+// 文件描述：为界面主题应用语言和排版方向。
+// 项目名称：Headlamp BBT
+// 文件名称：ThemeProviderNexti18n.tsx
+// 作者：Codex
+// 日期：2026-11-22
+
 /*
  * Copyright 2025 The Kubernetes Authors
  *
@@ -40,6 +46,7 @@ import {
 import { createTheme, StyledEngineProvider, Theme, ThemeProvider } from '@mui/material/styles';
 import React, { ReactNode, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { bbtBilingualLocale } from './bbtLocale';
 import { supportedLanguages } from './config';
 
 /**
@@ -49,6 +56,7 @@ import { supportedLanguages } from './config';
  * @returns A Material-UI locale object, defaults to enUS if locale is unsupported.
  */
 function getLocale(locale: string | undefined): typeof enUS {
+  if (locale === bbtBilingualLocale) return zhCN;
   const normalizedLocale = locale?.toLowerCase() ?? 'en';
 
   const LOCALES = {

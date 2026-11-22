@@ -1,3 +1,9 @@
+// 文件描述：启动本机Headlamp后端并加载项目插件。
+// 项目名称：Headlamp BBT
+// 文件名称：run-backend.js
+// 作者：Codex
+// 日期：2026-11-22
+
 /*
  * Copyright 2025 The Kubernetes Authors
  *
@@ -63,7 +69,12 @@ function main() {
     process.exit(1);
   }
 
-  const child = spawn(executable, process.argv.slice(2), { stdio: 'inherit' });
+  const env = { ...process.env };
+  const bundledPlugins = path.join(BACKEND_DIR, '..', '.plugins');
+  if (!env.HEADLAMP_STATIC_PLUGINS_DIR && fs.existsSync(bundledPlugins)) {
+    env.HEADLAMP_STATIC_PLUGINS_DIR = bundledPlugins;
+  }
+  const child = spawn(executable, process.argv.slice(2), { env, stdio: 'inherit' });
   child.on('error', error => {
     console.error(
       `Failed to start ${executable}: ${error.message}\n` +

@@ -32,8 +32,9 @@ import { useHistory } from 'react-router-dom';
 import { getClusterAppearanceFromMeta } from '../../helpers/clusterAppearance';
 import { isElectron } from '../../helpers/isElectron';
 import { getRecentClusters, setRecentCluster } from '../../helpers/recentClusters';
-import { useClustersConf, useSelectedClusters } from '../../lib/k8s';
+import { useSelectedClusters, useVisibleClustersConf } from '../../lib/k8s';
 import { Cluster } from '../../lib/k8s/cluster';
+import { clusterDisplayName } from '../../lib/k8s/clusterPresentation';
 import { createRouteURL } from '../../lib/router/createRouteURL';
 import { getCluster, getClusterPrefixedPath } from '../../lib/util';
 import ClusterBadge from '../Sidebar/ClusterBadge';
@@ -56,7 +57,7 @@ function ClusterListItem(props: { cluster: Cluster; onClick: () => void; selecte
       })}
     >
       <ClusterBadge
-        name={cluster.name}
+        name={clusterDisplayName(cluster)}
         icon={appearance.icon}
         accentColor={appearance.accentColor}
       />
@@ -85,7 +86,7 @@ function ClusterChooserPopup(props: ChooserPopupPros) {
   const { t } = useTranslation(['translation']);
   const { anchor, onClose, ...otherProps } = props;
   const [filter, setFilter] = React.useState('');
-  const clusters = useClustersConf();
+  const clusters = useVisibleClustersConf();
   const history = useHistory();
   const theme = useTheme();
   const isSmallScreen = useMediaQuery(theme.breakpoints.down('sm'));
@@ -110,7 +111,7 @@ function ClusterChooserPopup(props: ChooserPopupPros) {
     let allClusters = Object.values(clusters || {});
     if (filter !== '') {
       allClusters = allClusters.filter(cluster =>
-        cluster.name.toLowerCase().includes(filter.toLowerCase())
+        clusterDisplayName(cluster).toLowerCase().includes(filter.toLowerCase())
       );
     }
 
@@ -149,7 +150,7 @@ function ClusterChooserPopup(props: ChooserPopupPros) {
         return 1;
       }
 
-      return a.name.localeCompare(b.name);
+      return clusterDisplayName(a).localeCompare(clusterDisplayName(b));
     });
 
     return [recentClusters, clustersToShow];

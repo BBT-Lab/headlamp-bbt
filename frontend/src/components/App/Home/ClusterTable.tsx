@@ -36,6 +36,7 @@ import { formatClusterPathParam } from '../../../lib/cluster';
 import { useClustersConf, useClustersVersion } from '../../../lib/k8s';
 import { ApiError } from '../../../lib/k8s/api/v2/ApiError';
 import { Cluster } from '../../../lib/k8s/cluster';
+import { clusterDisplayName } from '../../../lib/k8s/clusterPresentation';
 import { createRouteURL } from '../../../lib/router/createRouteURL';
 import { getClusterPrefixedPath } from '../../../lib/util';
 import { useTypedSelector } from '../../../redux/hooks';
@@ -314,12 +315,13 @@ export default function ClusterTable({
         {
           id: 'name',
           header: t('Name'),
-          accessorKey: 'name',
+          accessorFn: cluster => clusterDisplayName(cluster),
           gridTemplate: 2,
           Cell: ({ row: { original } }) => {
             const appearance = getClusterAppearanceFromMeta(original.name);
+            const displayName = clusterDisplayName(original);
             return (
-              <LightTooltip title={original.name}>
+              <LightTooltip title={displayName}>
                 {/* Record as recently-used on open so it auto-connects on return.
                     onClickCapture on the wrapper keeps the Link's native
                     navigation (and works for keyboard activation) while the Link
@@ -334,7 +336,7 @@ export default function ClusterTable({
                 >
                   <Link routeName="cluster" params={{ cluster: original.name }}>
                     <ClusterBadge
-                      name={original.name}
+                      name={displayName}
                       icon={appearance.icon}
                       accentColor={appearance.accentColor}
                     />

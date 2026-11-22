@@ -14,9 +14,16 @@
  * limitations under the License.
  */
 
+// 文件描述：配置Headlamp BBT的默认语言与翻译目录。
+// 项目名称：Headlamp BBT
+// 文件名称：config.ts
+// 作者：Codex
+// 日期：2026-11-22
+
 import i18next from 'i18next';
 import LanguageDetector from 'i18next-browser-languagedetector';
 import { initReactI18next } from 'react-i18next';
+import { bbtBilingualLocale } from './bbtLocale';
 import sharedConfig from './i18nextSharedConfig.mjs';
 
 const en = {}; // To keep TS happy.
@@ -65,6 +72,10 @@ export const supportedLanguages: {
   },
   zh: {
     label: '简体中文',
+    dir: 'ltr',
+  },
+  [bbtBilingualLocale]: {
+    label: '简体中文（中英双语）',
     dir: 'ltr',
   },
   ko: {
@@ -159,8 +170,14 @@ i18next
     debug: import.meta.env.DEV && !import.meta.env.UNDER_TEST,
     ns: sharedConfig.namespaces,
     defaultNS: sharedConfig.defaultNamespace,
-    // Keeps the previously stored region-less "pt" preference on Portuguese.
-    fallbackLng: { pt: ['pt-PT', 'en'], default: ['en'] },
+    detection: { order: ['querystring', 'localStorage', 'cookie'] },
+    // 保留已选择的语言。双语目录只维护专有名词，其他词条沿用简体中文。
+    fallbackLng: code => {
+      if (!code) return [bbtBilingualLocale, 'zh', 'en'];
+      if (code === bbtBilingualLocale) return ['zh', 'en'];
+      if (code === 'pt') return ['pt-PT', 'en'];
+      return ['en'];
+    },
     contextSeparator: sharedConfig.contextSeparator,
     supportedLngs: Object.keys(supportedLanguages),
     // nonExplicitSupportedLngs: true,

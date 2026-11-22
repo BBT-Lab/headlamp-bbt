@@ -29,6 +29,7 @@ import type Event from '../../lib/k8s/event';
 import type { KubeEvent } from '../../lib/k8s/event';
 import type { KubeObject } from '../../lib/k8s/KubeObject';
 import Pod from '../../lib/k8s/pod';
+import { isDeadlineCompletion, podDisplayPhase } from '../../lib/k8s/podDisplayPhase';
 import type { Workload } from '../../lib/k8s/Workload';
 import { localeDate, timeAgo } from '../../lib/util';
 import Empty from '../common/EmptyContent';
@@ -261,7 +262,7 @@ function getDetailedPodStatus(pod: PodLike) {
  * or it is Running with its Ready condition True and no abnormal reason.
  */
 function isPodHealthy(pod: PodLike) {
-  if (pod.status?.phase === 'Succeeded') {
+  if (podDisplayPhase(pod) === 'Succeeded') {
     return true;
   }
 
@@ -486,6 +487,9 @@ export function getPodDiagnostics(
   events: EventLike[] = [],
   t: Translate = defaultTranslate
 ): DiagnosticItem[] {
+  if (isDeadlineCompletion(pod)) {
+    return [];
+  }
   const diagnostics: DiagnosticItem[] = [];
   const details = getDetailedPodStatus(pod);
   const podHealthy = isPodHealthy(pod);

@@ -1,3 +1,9 @@
+// 文件描述：验证Headlamp配置与各系统的目录约定。
+// 项目名称：Headlamp BBT
+// 文件名称：config_test.go
+// 作者：Codex
+// 日期：2026-11-19
+
 package config_test
 
 import (
@@ -1140,7 +1146,11 @@ func TestMakeKubeConfigsDir(t *testing.T) {
 
 		dir, err := config.MakeKubeConfigsDir("")
 		require.NoError(t, err)
-		assert.Contains(t, dir, filepath.Join("Headlamp", "kubeconfigs"))
+		expected := filepath.Join("Headlamp", "kubeconfigs")
+		if runtime.GOOS == "windows" {
+			expected = filepath.Join("Headlamp", "Config", "kubeconfigs")
+		}
+		assert.Contains(t, dir, expected)
 	})
 
 	t.Run("falls back to the executable directory", func(t *testing.T) {

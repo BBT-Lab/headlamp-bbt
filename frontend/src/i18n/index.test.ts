@@ -1,3 +1,9 @@
+// 文件描述：验证Headlamp各语言词库可加载。
+// 项目名称：Headlamp BBT
+// 文件名称：index.test.ts
+// 作者：Codex
+// 日期：2026-11-22
+
 /*
  * Copyright 2025 The Kubernetes Authors
  *
@@ -149,7 +155,8 @@ describe('The locales are not empty translations', () => {
     { locale: 'de', about: 'Über', delete: 'Löschen', cpu: 'CPU' },
     { locale: 'it', about: 'Informazioni', delete: 'Elimina', cpu: 'CPU' },
     { locale: 'zh-TW', about: '關於', delete: '刪除', cpu: 'CPU' },
-    { locale: 'zh', about: '关于', delete: '删除', cpu: 'CPU' },
+    { locale: 'zh', about: '关于', delete: '删除', cpu: '处理器' },
+    { locale: 'zh-x-bbt', about: '关于', delete: '删除', cpu: '处理器 (CPU)' },
     { locale: 'ko', about: '정보', delete: '삭제', cpu: 'CPU' },
     { locale: 'ja', about: '概要', delete: '削除', cpu: 'CPU' },
     { locale: 'hi', about: 'परिचय', delete: 'हटाएं', cpu: 'CPU' },

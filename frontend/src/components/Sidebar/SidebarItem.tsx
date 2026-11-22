@@ -27,6 +27,7 @@ import { formatClusterPathParam, getClusterPrefixedPath } from '../../lib/cluste
 import { useSelectedClusters } from '../../lib/k8s';
 import { createRouteURL } from '../../lib/router/createRouteURL';
 import { getRoute } from '../../lib/router/getRoute';
+import type { FeatureStage } from '../common/FeatureStageBadge';
 import ListItemLink from './ListItemLink';
 import { SidebarEntry } from './sidebarSlice';
 
@@ -67,6 +68,7 @@ export interface SidebarItemProps extends ListItemProps, SidebarEntry {
   hide?: boolean;
   level?: number;
   isCR?: boolean;
+  featureStage?: FeatureStage;
 }
 
 const SidebarItemBase = memo((props: SidebarItemProps & { clusters?: string[] }) => {
@@ -86,6 +88,7 @@ const SidebarItemBase = memo((props: SidebarItemProps & { clusters?: string[] })
     hide,
     tabIndex,
     isCR,
+    featureStage,
     entryType = 'link',
     sx,
     clusters = [],
@@ -192,6 +195,7 @@ const SidebarItemBase = memo((props: SidebarItemProps & { clusters?: string[] })
         selected={isSelected}
         pathname={fullURL || ''}
         primary={fullWidth ? label : ''}
+        featureStage={featureStage}
         icon={icon}
         name={label}
         subtitle={subtitle}
