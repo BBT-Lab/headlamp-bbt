@@ -1,9 +1,3 @@
-// 文件描述：验证Headlamp各语言词库可加载。
-// 项目名称：Headlamp BBT
-// 文件名称：index.test.ts
-// 作者：Codex
-// 日期：2026-11-22
-
 /*
  * Copyright 2025 The Kubernetes Authors
  *
@@ -19,6 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+// 文件描述：验证Headlamp各语言词库可加载。
+// 项目名称：Headlamp BBT
+// 文件名称：index.test.ts
+// 作者：Codex
+// 日期：2026-11-22
 
 import { error } from 'console';
 import fs from 'fs';

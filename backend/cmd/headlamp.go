@@ -1577,6 +1577,7 @@ func createHeadlampHandler(ctx context.Context, config *HeadlampConfig) http.Han
 				return
 			}
 		}
+
 		idToken, err := oauthConfig.Verifier.Verify(oauthConfig.Ctx, verificationToken)
 		if err != nil {
 			logger.Log(logger.LevelError, nil, err, "failed to verify ID Token")
@@ -2751,9 +2752,11 @@ func parseClusterFromKubeConfig(kubeConfigs []string) ([]Cluster, []error) {
 
 func (c *HeadlampConfig) getConfig(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
+
 	clusters := c.getClusters()
 	if c.rancher != nil {
 		clusters = c.rancherClusters(r)
+
 		w.Header().Set("Cache-Control", "no-store")
 	}
 

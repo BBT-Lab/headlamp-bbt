@@ -15,8 +15,8 @@
  */
 
 import { useTranslation } from 'react-i18next';
-import { useVisibleClustersConf } from '../../../lib/k8s/useClusterPresentation';
 import { clusterDisplayName } from '../../../lib/k8s/clusterPresentation';
+import { useVisibleClustersConf } from '../../../lib/k8s/useClusterPresentation';
 import Link from '../../common/Link';
 import SectionBox from '../../common/SectionBox';
 import SimpleTable from '../../common/SimpleTable';

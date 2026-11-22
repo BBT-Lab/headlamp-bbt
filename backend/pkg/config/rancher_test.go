@@ -4,7 +4,7 @@
 // 作者：Codex
 // 日期：2026-11-19
 
-package config
+package config //nolint:testpackage // 验证内部解析流程在Rancher模式下跳过个人kubeconfig。
 
 import (
 	"path/filepath"
@@ -35,6 +35,7 @@ func TestRancherRejectsInvalidEndpoint(t *testing.T) {
 // :param t: Go测试上下文。
 func TestRancherDoesNotLoadPersonalKubeconfig(t *testing.T) {
 	t.Setenv("KUBECONFIG", filepath.Join(t.TempDir(), "personal-kubeconfig"))
+
 	c := Config{RancherURL: "https://rancher.bbt.sspu.edu.cn"}
 	require.NoError(t, setKubeConfigPath(&c))
 	require.Empty(t, c.KubeConfigPath)

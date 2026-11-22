@@ -160,11 +160,7 @@ func (c *Config) Validate() error {
 		logger.Log(logger.LevelWarn, nil, nil, "oidc-skip-tls-verify is set, this is not safe for production")
 	}
 
-	if err := c.validateOIDCCAFile(); err != nil {
-		return err
-	}
-
-	if err := c.validateRancher(); err != nil {
+	if err := c.validateOIDCSetup(); err != nil {
 		return err
 	}
 

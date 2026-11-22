@@ -23,7 +23,7 @@ import (
 )
 
 // ErrUnauthorized表示Rancher拒绝当前用户令牌。
-var ErrUnauthorized = errors.New("Rancher session is unauthorized")
+var ErrUnauthorized = errors.New("rancher session is unauthorized")
 
 // Cluster保存Rancher返回的集群标识与显示名称。
 type Cluster struct {
@@ -48,15 +48,19 @@ func NewClient(server, caPEM string) (*Client, error) {
 		strings.Trim(origin.Path, "/") != "" || origin.RawQuery != "" || origin.Fragment != "" {
 		return nil, errors.New("Rancher requires an HTTPS origin")
 	}
+
 	roots, err := x509.SystemCertPool()
 	if err != nil {
 		return nil, fmt.Errorf("读取系统根证书: %w", err)
 	}
+
 	if caPEM != "" && !roots.AppendCertsFromPEM([]byte(caPEM)) {
 		return nil, errors.New("Rancher CA contains no valid PEM certificates")
 	}
+
 	transport := http.DefaultTransport.(*http.Transport).Clone()
 	transport.TLSClientConfig = &tls.Config{RootCAs: roots, MinVersion: tls.VersionTLS12}
+
 	return &Client{
 		server: strings.TrimRight(server, "/"),
 		http: &http.Client{
@@ -91,44 +95,57 @@ func (c *Client) Clusters(ctx context.Context, token string) ([]Cluster, error) 
 	if token == "" {
 		return nil, ErrUnauthorized
 	}
+
 	next := c.server + "/v3/clusters?limit=1000"
 	visited := map[string]bool{}
 	byID := map[string]Cluster{}
+
 	for next != "" {
 		if visited[next] {
 			return nil, errors.New("Rancher returned a repeated cluster pagination link")
 		}
+
 		visited[next] = true
+
 		page, err := c.clusterPage(ctx, token, next)
 		if err != nil {
 			return nil, err
 		}
+
 		for _, cluster := range page.Data {
 			if len(validation.IsDNS1123Subdomain(cluster.ID)) != 0 {
 				return nil, errors.New("Rancher returned an invalid cluster ID")
 			}
+
 			byID[cluster.ID] = cluster
 		}
+
 		next = page.Pagination.Next
 		if next != "" {
 			base, _ := url.Parse(c.server)
+
 			reference, err := url.Parse(next)
 			if err != nil {
 				return nil, errors.New("Rancher returned an invalid pagination URL")
 			}
+
 			resolved := base.ResolveReference(reference)
 			if resolved.Scheme != base.Scheme || resolved.Host != base.Host || resolved.User != nil ||
 				resolved.Path != "/v3/clusters" || resolved.Fragment != "" {
 				return nil, errors.New("Rancher returned a pagination URL outside the cluster API")
 			}
+
 			next = resolved.String()
 		}
 	}
+
 	clusters := make([]Cluster, 0, len(byID))
 	for _, cluster := range byID {
 		clusters = append(clusters, cluster)
 	}
+
 	sort.Slice(clusters, func(i, j int) bool { return clusters[i].ID < clusters[j].ID })
+
 	return clusters, nil
 }
 
@@ -150,22 +167,29 @@ func (c *Client) clusterPage(ctx context.Context, token, endpoint string) (*clus
 	if err != nil {
 		return nil, err
 	}
+
 	request.Header.Set("Authorization", "Bearer "+token)
 	request.Header.Set("Accept", "application/json")
+
 	response, err := c.http.Do(request)
 	if err != nil {
 		return nil, fmt.Errorf("请求Rancher集群列表: %w", err)
 	}
-	defer response.Body.Close()
+
+	defer func() { _ = response.Body.Close() }()
+
 	if response.StatusCode == http.StatusUnauthorized {
 		return nil, ErrUnauthorized
 	}
+
 	if response.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("Rancher cluster API returned HTTP %d", response.StatusCode)
 	}
+
 	var page clusterPage
 	if err := json.NewDecoder(response.Body).Decode(&page); err != nil {
 		return nil, fmt.Errorf("解析Rancher集群列表: %w", err)
 	}
+
 	return &page, nil
 }

@@ -1,9 +1,3 @@
-// 文件描述：为桌面窗口加载与网页一致的语言。
-// 项目名称：Headlamp BBT
-// 文件名称：i18next.config.ts
-// 作者：Codex
-// 日期：2026-11-22
-
 /*
  * Copyright 2025 The Kubernetes Authors
  *
@@ -19,6 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+// 文件描述：为桌面窗口加载与网页一致的语言。
+// 项目名称：Headlamp BBT
+// 文件名称：i18next.config.ts
+// 作者：Codex
+// 日期：2026-11-22
 
 import i18next from 'i18next';
 import { CURRENT_LOCALES, LOCALES_DIR } from './i18n-helper';

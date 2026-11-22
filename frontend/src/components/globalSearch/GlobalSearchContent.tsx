@@ -33,7 +33,6 @@ import { generatePath, useHistory, useLocation, useRouteMatch } from 'react-rout
 import { FixedSizeList } from 'react-window';
 import { getCombinedAllowedNamespaces } from '../../helpers/clusterSettings';
 import { useSelectedClusters } from '../../lib/k8s';
-import { useVisibleClustersConf } from '../../lib/k8s/useClusterPresentation';
 import ConfigMap from '../../lib/k8s/configMap';
 import CronJob from '../../lib/k8s/cronJob';
 import Deployment from '../../lib/k8s/deployment';
@@ -52,6 +51,7 @@ import ReplicaSet from '../../lib/k8s/replicaSet';
 import Service from '../../lib/k8s/service';
 import ServiceAccount from '../../lib/k8s/serviceAccount';
 import StatefulSet from '../../lib/k8s/statefulSet';
+import { useVisibleClustersConf } from '../../lib/k8s/useClusterPresentation';
 import { createRouteURL } from '../../lib/router/createRouteURL';
 import { getDefaultRoutes } from '../../lib/router/getDefaultRoutes';
 import { getClusterPrefixedPath } from '../../lib/util';

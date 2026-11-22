@@ -12,6 +12,8 @@
 
 同步任务使用`headlamp-harbor-push`镜像仓库Secret。该Secret包含Harbor Robot Account凭据，权限为`sspu`项目的Pull Repository和Push Repository。生产配置可用`kubectl kustomize deploy/sync`渲染。命名空间、内部根证书ConfigMap和Secret由集群管理员管理。
 
+同步任务通过集群DNS访问GitHub的Git、API及附件域名。任务使用`bbt-root-ca`校验校内出口证书，并在Git配置中分别为GitHub和GitLab指定CA。
+
 查看同步状态：
 
 ```bash

@@ -37,7 +37,7 @@ test('loads the frontend from a non-root base URL', async ({ page }) => {
     }
   });
 
-  await page.goto(`${testURL}/project/create-yaml`);
+  await page.goto(`${testURL}/project/create-yaml?lng=en`);
   await expect(page.locator('#root .splash')).toHaveCount(0);
   await expect(page.getByRole('heading', { name: 'Create new Project from YAML' })).toBeVisible();
   await page.reload();

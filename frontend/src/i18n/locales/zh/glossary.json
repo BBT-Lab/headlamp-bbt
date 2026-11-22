@@ -204,6 +204,7 @@
   "Show Logs": "显示日志",
   "Terminal / Exec": "终端 / 执行",
   "Attach": "附加",
+  "Completed": "已完成",
   "{{ loaded }} loaded": "已加载{{ loaded }}项",
   "{{ loaded }} of ~{{ total }}": "已加载{{ loaded }}项，约{{ total }}项",
   "Load more": "加载更多",
@@ -267,7 +268,7 @@
   "Storage Classes": "存储类别",
   "Volume Attributes Classes": "卷属性类",
   "Network": "网络",
-  "Gateway (beta)": "网关",
+  "Gateway": "网关",
   "HTTP Routes": "HTTP路由",
   "GRPC Routes": "GRPC路由",
   "BackendTLSPolicies": "后端TLS策略",
@@ -283,8 +284,7 @@
   "Leases": "租约",
   "Mutating Webhook Configurations": "变更网络回调设置",
   "Validating Webhook Configurations": "验证网络回调设置",
-  "Devices (alpha)": "设备",
-  "Scheduling (alpha)": "调度",
+  "Scheduling": "调度",
   "Git Version": "Git版本",
   "Git Tree State": "Git树状态",
   "Go Version": "Go版本",
@@ -342,7 +342,5 @@
   "Pods Status": "容器组状态",
   "Completion Time": "完成时间",
   "Duration": "持续时间",
-  "Completed Indexes": "已完成索引",
-  "Gateway": "网关",
-  "Scheduling": "调度"
+  "Completed Indexes": "已完成索引"
 }

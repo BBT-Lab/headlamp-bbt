@@ -15,6 +15,12 @@
  */
 
 /// <reference types="@testing-library/jest-dom" />
+// 文件描述：配置浏览器组件测试的通用环境。
+// 项目名称：Headlamp BBT
+// 文件名称：setupTests.ts
+// 作者：Codex
+// 日期：2026-11-23
+
 import '@testing-library/jest-dom/vitest';
 import 'vitest-canvas-mock';
 import indexeddb from 'fake-indexeddb';
@@ -133,10 +139,13 @@ if (globalThis.window) {
     writable: true,
     configurable: true,
   });
+  // 既有的英文标签断言使用明确保存过的语言选择。
+  localStorage.setItem('i18nextLng', 'en');
 }
 
 beforeEach(() => {
   // Clears the database and adds some testing data.
   // Jest will wait for this promise to resolve before running tests.
   localStorage.clear();
+  localStorage.setItem('i18nextLng', 'en');
 });

@@ -43,8 +43,9 @@ func TestRancherClusterAccess(t *testing.T) {
 func TestRancherVisibleClusterMetadata(t *testing.T) {
 	client, err := rancher.NewClient("https://rancher.bbt.sspu.edu.cn", "")
 	require.NoError(t, err)
+
 	c := &HeadlampConfig{rancher: &rancherIntegration{client: client}}
-	r := httptest.NewRequest(http.MethodGet, "/config", nil)
+	r := httptest.NewRequestWithContext(t.Context(), http.MethodGet, "/config", nil)
 	identity := &rancher.Identity{Clusters: []rancher.Cluster{
 		{ID: "c-sz99k", Name: "prd"},
 		{ID: "c-vfttv", Name: "harbor"},
@@ -65,15 +66,20 @@ func TestRancherVisibleClusterMetadata(t *testing.T) {
 // :param t: Go测试上下文。
 func TestRancherRequestContextKey(t *testing.T) {
 	c := &HeadlampConfig{rancher: &rancherIntegration{}}
-	r, err := http.NewRequest(http.MethodGet, "https://headlamp.bbt.sspu.edu.cn/clusters/prd--c-sz99k/api", nil)
+	r, err := http.NewRequestWithContext(
+		t.Context(), http.MethodGet, "https://headlamp.bbt.sspu.edu.cn/clusters/prd--c-sz99k/api", nil,
+	)
 	require.NoError(t, err)
+
 	r = mux.SetURLVars(r, map[string]string{"clusterName": "prd--c-sz99k"})
 	r.Header.Set("X-HEADLAMP-USER-ID", "client-supplied")
 	_, err = c.getContextKeyForRequest(r)
 	require.ErrorIs(t, err, rancher.ErrUnauthorized)
+
 	r = r.WithContext(context.WithValue(r.Context(), rancherIdentityKey{}, &rancher.Identity{SessionKey: "session-a"}))
 	first, err := c.getContextKeyForRequest(r)
 	require.NoError(t, err)
+
 	r = r.WithContext(context.WithValue(r.Context(), rancherIdentityKey{}, &rancher.Identity{SessionKey: "session-b"}))
 	second, err := c.getContextKeyForRequest(r)
 	require.NoError(t, err)
@@ -87,6 +93,7 @@ func TestRancherRequestContextKey(t *testing.T) {
 func TestRancherProxyContextIsolation(t *testing.T) {
 	client, err := rancher.NewClient("https://rancher.bbt.sspu.edu.cn", "")
 	require.NoError(t, err)
+
 	store := kubeconfig.NewContextStore()
 	c := &HeadlampConfig{
 		HeadlampConfig: &headlampconfig.HeadlampConfig{
@@ -107,8 +114,10 @@ func TestRancherProxyContextIsolation(t *testing.T) {
 	require.Empty(t, first.AuthInfo.ClientKeyData)
 	require.True(t, first.Internal)
 	require.Equal(t, "https://rancher.bbt.sspu.edu.cn/k8s/clusters/c-sz99k", first.Cluster.Server)
+
 	_, err = store.GetContext(name)
 	require.Error(t, err)
+
 	multiplexer := NewMultiplexer(store, false)
 	multiplexer.sessionToken = c.rancherSessionToken
 	resolved, err := multiplexer.getClusterContextWithFallback(name, "session-b")

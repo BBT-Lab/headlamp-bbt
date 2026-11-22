@@ -69,20 +69,27 @@ func (s *Sessions) Start(ctx context.Context, token *oauth2.Token) (string, *Ide
 	if token == nil || token.AccessToken == "" || token.RefreshToken == "" || token.Expiry.IsZero() {
 		return "", nil, errors.New("Rancher login requires access token, refresh token and expiry")
 	}
+
 	clusters, err := s.client.Clusters(ctx, token.AccessToken)
 	if err != nil {
 		return "", nil, err
 	}
+
 	if len(clusters) == 0 {
 		return "", nil, errors.New("当前Rancher账号没有可访问的集群")
 	}
+
 	id := rand.Text()
 	stored := &session{token: token, clusters: clusters}
+
 	key := sessionKey(id)
 	if err := s.store.SetWithTTL(ctx, key, stored, s.ttl); err != nil {
 		return "", nil, err
 	}
-	return id, &Identity{SessionKey: key, AccessToken: token.AccessToken, Clusters: append([]Cluster(nil), clusters...)}, nil
+
+	return id, &Identity{
+		SessionKey: key, AccessToken: token.AccessToken, Clusters: append([]Cluster(nil), clusters...),
+	}, nil
 }
 
 // Identity读取会话，并由OAuth2客户端按过期时间刷新访问令牌。
@@ -107,23 +114,30 @@ func (s *Sessions) IdentityByKey(ctx context.Context, key string, discover bool)
 		if errors.Is(err, cache.ErrNotFound) {
 			return nil, ErrUnauthorized
 		}
+
 		return nil, err
 	}
+
 	stored.mu.Lock()
 	defer stored.mu.Unlock()
+
 	ctx = context.WithValue(ctx, oauth2.HTTPClient, s.client.http)
+
 	token, err := s.oauth.TokenSource(ctx, stored.token).Token()
 	if err != nil {
 		return nil, fmt.Errorf("%w: Rancher令牌刷新失败，请重新登录", ErrUnauthorized)
 	}
+
 	stored.token = token
 	if discover {
 		clusters, err := s.client.Clusters(ctx, token.AccessToken)
 		if err != nil {
 			return nil, err
 		}
+
 		stored.clusters = clusters
 	}
+
 	return &Identity{
 		SessionKey:  key,
 		AccessToken: token.AccessToken,

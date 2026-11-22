@@ -21,9 +21,8 @@ import sharedConfig from './i18nextSharedConfig.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const directoryPath = path.join(__dirname, sharedConfig.localesPath);
-const currentLocales = [];
-
-fs.readdirSync(directoryPath).forEach(file => currentLocales.push(file));
+// 双语目录只维护术语覆盖，基础文案由简体中文提供。
+const currentLocales = fs.readdirSync(directoryPath).filter(locale => locale !== 'zh-x-bbt');
 
 export default {
   lexers: {

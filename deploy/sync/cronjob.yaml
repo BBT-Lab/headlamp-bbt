@@ -37,10 +37,6 @@ spec:
                     secretKeyRef:
                       name: headlamp-sync-credentials
                       key: gitlab-token
-                - name: HTTPS_PROXY
-                  value: http://192.168.122.1:10810
-                - name: HTTP_PROXY
-                  value: http://192.168.122.1:10810
                 - &noProxy
                   name: NO_PROXY
                   value: .bbt.sspu.edu.cn,localhost,127.0.0.1

@@ -22,8 +22,8 @@ import { Redirect, Route, RouteProps, Switch, useHistory } from 'react-router-do
 import { getProductName } from '../../helpers/getProductInfo';
 import { getCluster, getSelectedClusters } from '../../lib/cluster';
 import { useCluster, useClustersConf } from '../../lib/k8s';
-import { useClusterDisplayName } from '../../lib/k8s/useClusterPresentation';
 import { testAuth } from '../../lib/k8s/api/v1/clusterApi';
+import { useClusterDisplayName } from '../../lib/k8s/useClusterPresentation';
 import { createRouteURL } from '../../lib/router/createRouteURL';
 import { getDefaultRoutes } from '../../lib/router/getDefaultRoutes';
 import { getRoutePath } from '../../lib/router/getRoutePath';

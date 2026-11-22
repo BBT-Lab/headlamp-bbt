@@ -1,9 +1,3 @@
-// 文件描述：为界面主题应用语言和排版方向。
-// 项目名称：Headlamp BBT
-// 文件名称：ThemeProviderNexti18n.tsx
-// 作者：Codex
-// 日期：2026-11-22
-
 /*
  * Copyright 2025 The Kubernetes Authors
  *
@@ -19,6 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+// 文件描述：为界面主题应用语言和排版方向。
+// 项目名称：Headlamp BBT
+// 文件名称：ThemeProviderNexti18n.tsx
+// 作者：Codex
+// 日期：2026-11-22
 
 import {
   arSA,

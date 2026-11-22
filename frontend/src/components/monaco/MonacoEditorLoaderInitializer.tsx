@@ -1,9 +1,3 @@
-// 文件描述：设置资源编辑器的语言和静态资源路径。
-// 项目名称：Headlamp BBT
-// 文件名称：MonacoEditorLoaderInitializer.tsx
-// 作者：Codex
-// 日期：2026-11-22
-
 /*
  * Copyright 2025 The Kubernetes Authors
  *
@@ -19,6 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+// 文件描述：设置资源编辑器的语言和静态资源路径。
+// 项目名称：Headlamp BBT
+// 文件名称：MonacoEditorLoaderInitializer.tsx
+// 作者：Codex
+// 日期：2026-11-22
 
 import { loader } from '@monaco-editor/react';
 import React, { useState } from 'react';

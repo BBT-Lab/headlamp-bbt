@@ -282,6 +282,7 @@ func (c *HeadlampConfig) getContextKeyForRequest(r *http.Request) (string, error
 		if err != nil {
 			return "", err
 		}
+
 		return statelessContextKey(clusterName, identity.SessionKey), nil
 	}
 

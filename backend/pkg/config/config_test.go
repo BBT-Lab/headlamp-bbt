@@ -1146,10 +1146,12 @@ func TestMakeKubeConfigsDir(t *testing.T) {
 
 		dir, err := config.MakeKubeConfigsDir("")
 		require.NoError(t, err)
+
 		expected := filepath.Join("Headlamp", "kubeconfigs")
 		if runtime.GOOS == "windows" {
 			expected = filepath.Join("Headlamp", "Config", "kubeconfigs")
 		}
+
 		assert.Contains(t, dir, expected)
 	})
 

@@ -1,9 +1,3 @@
-// 文件描述：为资源表格选择界面语言。
-// 项目名称：Headlamp BBT
-// 文件名称：tableLocalization.ts
-// 作者：Codex
-// 日期：2026-11-22
-
 /*
  * Copyright 2025 The Kubernetes Authors
  *
@@ -19,6 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+// 文件描述：为资源表格选择界面语言。
+// 项目名称：Headlamp BBT
+// 文件名称：tableLocalization.ts
+// 作者：Codex
+// 日期：2026-11-22
 
 import type { MRT_Localization } from 'material-react-table';
 import { MRT_Localization_AR } from 'material-react-table/locales/ar';

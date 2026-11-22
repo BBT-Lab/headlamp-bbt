@@ -4,7 +4,7 @@
 // 作者：Codex
 // 日期：2026-11-19
 
-package rancher
+package rancher //nolint:testpackage // 通过内部HTTP客户端验证Rancher真实的匿名访问限制。
 
 import (
 	"context"
@@ -27,6 +27,7 @@ func TestRancherLiveClusters(t *testing.T) {
 	if path == "" {
 		t.Skip("设置HEADLAMP_RANCHER_TEST_KUBECONFIG与HEADLAMP_RANCHER_TEST_CONTEXT后运行真实Rancher只读验证")
 	}
+
 	contextName := os.Getenv("HEADLAMP_RANCHER_TEST_CONTEXT")
 	require.NotEmpty(t, contextName)
 	config, err := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(
@@ -39,24 +40,32 @@ func TestRancherLiveClusters(t *testing.T) {
 	require.NoError(t, err)
 	require.True(t, strings.HasPrefix(server.Path, "/k8s/clusters/"))
 	clusterID := strings.TrimPrefix(server.Path, "/k8s/clusters/")
+
 	caPEM := config.CAData
 	if config.CAFile != "" {
 		caPEM, err = os.ReadFile(config.CAFile)
 		require.NoError(t, err)
 	}
+
 	client, err := NewClient(server.Scheme+"://"+server.Host, string(caPEM))
 	require.NoError(t, err)
+
 	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 	defer cancel()
+
 	clusters, err := client.Clusters(ctx, config.BearerToken)
 	require.NoError(t, err)
 	require.NotEmpty(t, clusters)
+
 	found := false
+
 	for _, cluster := range clusters {
 		t.Logf("context=%s 可见集群=%s 名称=%s", contextName, cluster.ID, cluster.Name)
 		found = found || cluster.ID == clusterID
 	}
+
 	require.True(t, found, "发现结果应包含当前真实kubeconfig对应的集群")
+
 	_, err = client.clusterPage(ctx, "", client.Server()+"/v3/clusters")
 	require.True(t, errors.Is(err, ErrUnauthorized), "Rancher应拒绝匿名访问集群列表")
 }

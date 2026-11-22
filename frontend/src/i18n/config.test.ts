@@ -1,9 +1,3 @@
-// 文件描述：验证默认语言、术语回退和语言切换。
-// 项目名称：Headlamp BBT
-// 文件名称：config.test.ts
-// 作者：Codex
-// 日期：2026-11-22
-
 /*
  * Copyright 2025 The Kubernetes Authors
  *
@@ -20,12 +14,19 @@
  * limitations under the License.
  */
 
+// 文件描述：验证默认语言、术语回退和语言切换。
+// 项目名称：Headlamp BBT
+// 文件名称：config.test.ts
+// 作者：Codex
+// 日期：2026-11-22
+
 import { bbtBilingualLocale } from './bbtLocale';
 import i18next from './config';
 
 describe('i18n configuration', () => {
   it('starts with the bilingual locale and uses Chinese for ordinary text', async () => {
-    await i18next.loadLanguages(bbtBilingualLocale);
+    localStorage.removeItem('i18nextLng');
+    await i18next.changeLanguage();
     expect(i18next.resolvedLanguage).toBe(bbtBilingualLocale);
     expect(i18next.t('Namespace')).toBe('命名空间 (Namespace)');
     expect(i18next.t('Connect')).toBe('连接');

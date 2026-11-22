@@ -585,6 +585,7 @@ func (m *Multiplexer) monitorConnection(conn *Connection) {
 					conn.safeClose()
 					return
 				}
+
 				if err := m.refreshConnectionToken(conn, &token); err != nil {
 					conn.safeClose()
 					return
@@ -616,11 +617,13 @@ func (m *Multiplexer) reconnect(conn *Connection) (*Connection, error) {
 	conn.mu.RLock()
 	token := conn.Token
 	conn.mu.RUnlock()
+
 	if m.sessionToken != nil {
 		current, err := m.sessionToken(conn.ClusterID, conn.UserID)
 		if err != nil {
 			return nil, err
 		}
+
 		token = &current
 	}
 	newConn, err := m.establishClusterConnection(
@@ -695,19 +698,24 @@ func (m *Multiplexer) processClientMessage(
 	lockClientConn *WSConnLock,
 	msg Message,
 ) {
-	var token string
-	var err error
+	var (
+		token string
+		err   error
+	)
+
 	if m.sessionToken != nil {
 		identity, identityErr := requestRancherIdentity(r)
 		if identityErr != nil {
 			m.sendClientError(lockClientConn, msg.ClusterID, msg.Path, msg.Query, msg.UserID, identityErr)
 			return
 		}
+
 		msg.UserID = identity.SessionKey
 		token, err = m.sessionToken(msg.ClusterID, msg.UserID)
 	} else {
 		token, err = auth.GetTokenFromCookie(r, msg.ClusterID)
 	}
+
 	if err != nil {
 		m.sendClientError(lockClientConn, msg.ClusterID, msg.Path, msg.Query, msg.UserID, err)
 		return
