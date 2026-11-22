@@ -1365,6 +1365,7 @@ func createHeadlampHandler(ctx context.Context, config *HeadlampConfig) http.Han
 
 	r.HandleFunc("/oidc", func(w http.ResponseWriter, r *http.Request) {
 		ctx := context.Background()
+
 		cluster := r.URL.Query().Get("cluster")
 		if config.rancher != nil {
 			cluster = config.rancher.login
@@ -1961,6 +1962,7 @@ func serverHandler(ctx context.Context, config *HeadlampConfig) (http.Handler, e
 	if err := setupRancher(ctx, config); err != nil {
 		return nil, err
 	}
+
 	handler := createHeadlampHandler(ctx, config)
 
 	if err := startClusterInventory(ctx, config); err != nil {

@@ -67,7 +67,7 @@ func NewSessions(client *Client, clientID, clientSecret string, ttl time.Duratio
 // :returns: 随机会话标识、用户身份或请求错误。
 func (s *Sessions) Start(ctx context.Context, token *oauth2.Token) (string, *Identity, error) {
 	if token == nil || token.AccessToken == "" || token.RefreshToken == "" || token.Expiry.IsZero() {
-		return "", nil, errors.New("Rancher login requires access token, refresh token and expiry")
+		return "", nil, errors.New("登录Rancher需要访问令牌、刷新令牌和过期时间")
 	}
 
 	clusters, err := s.client.Clusters(ctx, token.AccessToken)
