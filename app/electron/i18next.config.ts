@@ -26,10 +26,8 @@ import { createJsonBackend } from './i18nextJsonBackend';
 
 i18next.use(createJsonBackend(LOCALES_DIR)).init({
   debug: process.env.NODE_ENV === 'development',
-  fallbackLng: code => {
-    if (!code) return ['zh-x-bbt', 'zh', 'en'];
-    return code === 'zh-x-bbt' ? ['zh', 'en'] : ['en'];
-  },
+  // 桌面主进程会在收到网页选择后切换语言。双语模式复用简体中文菜单。
+  fallbackLng: { 'zh-x-bbt': ['zh', 'en'], default: ['en'] },
   supportedLngs: CURRENT_LOCALES,
   // CURRENT_LOCALES comes from the lowercase locale directory names, so region codes
   // like pt-BR have to be lowercased to match them and to resolve the load path.
