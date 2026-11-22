@@ -591,6 +591,7 @@ func (m *Multiplexer) monitorConnection(conn *Connection) {
 					return
 				}
 			}
+
 			if err := conn.WSConn.WriteMessage(websocket.PingMessage, nil); err != nil {
 				conn.updateStatus(StateError, fmt.Errorf("heartbeat failed: %w", err))
 
@@ -626,6 +627,7 @@ func (m *Multiplexer) reconnect(conn *Connection) (*Connection, error) {
 
 		token = &current
 	}
+
 	newConn, err := m.establishClusterConnection(
 		conn.ClusterID,
 		conn.UserID,

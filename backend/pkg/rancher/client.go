@@ -46,7 +46,7 @@ func NewClient(server, caPEM string) (*Client, error) {
 	origin, err := url.Parse(server)
 	if err != nil || origin.Scheme != "https" || origin.Hostname() == "" || origin.User != nil ||
 		strings.Trim(origin.Path, "/") != "" || origin.RawQuery != "" || origin.Fragment != "" {
-		return nil, errors.New("Rancher requires an HTTPS origin")
+		return nil, errors.New("配置的Rancher地址必须是HTTPS源地址")
 	}
 
 	roots, err := x509.SystemCertPool()
@@ -55,7 +55,7 @@ func NewClient(server, caPEM string) (*Client, error) {
 	}
 
 	if caPEM != "" && !roots.AppendCertsFromPEM([]byte(caPEM)) {
-		return nil, errors.New("Rancher CA contains no valid PEM certificates")
+		return nil, errors.New("配置的Rancher CA未包含有效的PEM证书")
 	}
 
 	transport := http.DefaultTransport.(*http.Transport).Clone()
@@ -102,7 +102,7 @@ func (c *Client) Clusters(ctx context.Context, token string) ([]Cluster, error) 
 
 	for next != "" {
 		if visited[next] {
-			return nil, errors.New("Rancher returned a repeated cluster pagination link")
+			return nil, errors.New("收到重复的Rancher集群分页链接")
 		}
 
 		visited[next] = true
@@ -114,7 +114,7 @@ func (c *Client) Clusters(ctx context.Context, token string) ([]Cluster, error) 
 
 		for _, cluster := range page.Data {
 			if len(validation.IsDNS1123Subdomain(cluster.ID)) != 0 {
-				return nil, errors.New("Rancher returned an invalid cluster ID")
+				return nil, errors.New("收到无效的Rancher集群ID")
 			}
 
 			byID[cluster.ID] = cluster
@@ -126,13 +126,13 @@ func (c *Client) Clusters(ctx context.Context, token string) ([]Cluster, error) 
 
 			reference, err := url.Parse(next)
 			if err != nil {
-				return nil, errors.New("Rancher returned an invalid pagination URL")
+				return nil, errors.New("收到无效的Rancher分页URL")
 			}
 
 			resolved := base.ResolveReference(reference)
 			if resolved.Scheme != base.Scheme || resolved.Host != base.Host || resolved.User != nil ||
 				resolved.Path != "/v3/clusters" || resolved.Fragment != "" {
-				return nil, errors.New("Rancher returned a pagination URL outside the cluster API")
+				return nil, errors.New("收到超出Rancher集群API范围的分页URL")
 			}
 
 			next = resolved.String()
@@ -183,7 +183,7 @@ func (c *Client) clusterPage(ctx context.Context, token, endpoint string) (*clus
 	}
 
 	if response.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("Rancher cluster API returned HTTP %d", response.StatusCode)
+		return nil, fmt.Errorf("请求Rancher集群API得到HTTP %d", response.StatusCode)
 	}
 
 	var page clusterPage
