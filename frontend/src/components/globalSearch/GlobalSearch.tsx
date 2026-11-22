@@ -14,6 +14,12 @@
  * limitations under the License.
  */
 
+// 文件描述：提供全局搜索和可翻译的快捷键提示。
+// 项目名称：Headlamp BBT
+// 文件名称：GlobalSearch.tsx
+// 作者：Codex
+// 日期：2026-11-22
+
 import { Icon } from '@iconify/react';
 import Box from '@mui/material/Box';
 import CircularProgress from '@mui/material/CircularProgress';
@@ -118,29 +124,32 @@ export function GlobalSearch({ isIconButton }: { isIconButton?: boolean }) {
             gap={0.5}
             sx={{ color: theme.palette.navbar.searchHint, pointerEvents: 'none' }}
           >
-            <Trans>
-              Press
-              <Box
-                component="kbd"
-                sx={theme => ({
-                  fontSize: '12px',
-                  fontFamily: 'monospace',
-                  border: '1px solid',
-                  borderRadius: '4px',
-                  borderColor: theme.palette.divider,
-                  lineHeight: 1,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  minWidth: '24px',
-                  height: '24px',
-                  px: 0.5,
-                })}
-              >
-                {formatShortcutKey(searchShortcutKey)}
-              </Box>
-              to search
-            </Trans>
+            <Trans
+              i18nKey="Press <shortcut>{{shortcutKey}}</shortcut> to search"
+              defaults="Press <shortcut>{{shortcutKey}}</shortcut> to search"
+              values={{ shortcutKey: formatShortcutKey(searchShortcutKey) }}
+              components={{
+                shortcut: (
+                  <Box
+                    component="kbd"
+                    sx={theme => ({
+                      fontSize: '12px',
+                      fontFamily: 'monospace',
+                      border: '1px solid',
+                      borderRadius: '4px',
+                      borderColor: theme.palette.divider,
+                      lineHeight: 1,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      minWidth: '24px',
+                      height: '24px',
+                      px: 0.5,
+                    })}
+                  />
+                ),
+              }}
+            />
           </Box>
         ),
       }}

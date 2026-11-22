@@ -29,9 +29,10 @@ import { useDispatch } from 'react-redux';
 import { useHistory, useLocation } from 'react-router-dom';
 import { sanitizeCssColor } from '../../../helpers/clusterAppearance';
 import { isElectron } from '../../../helpers/isElectron';
-import { useCluster, useClustersConf } from '../../../lib/k8s';
+import { useCluster } from '../../../lib/k8s';
 import { useAllowedNamespacesFromSelector } from '../../../lib/k8s/allowedNamespaces';
 import { deleteCluster } from '../../../lib/k8s/api/v1/clusterApi';
+import { useVisibleClustersConf } from '../../../lib/k8s/useClusterPresentation';
 import { setConfig } from '../../../redux/configSlice';
 import { HeadlampEventType, useEventCallback } from '../../../redux/headlampEventSlice';
 import ConfirmButton from '../../common/ConfirmButton';
@@ -50,7 +51,7 @@ import { useClusterSettings } from './useClusterSettings';
 import { isValidNamespaceFormat } from './util';
 
 export default function SettingsCluster() {
-  const clusterConf = useClustersConf();
+  const clusterConf = useVisibleClustersConf();
   const clusters = Object.values(clusterConf || {})
     .map(cluster => cluster.name)
     .sort((a, b) => a.localeCompare(b));

@@ -14,6 +14,12 @@
  * limitations under the License.
  */
 
+// 文件描述：为资源表格选择界面语言。
+// 项目名称：Headlamp BBT
+// 文件名称：tableLocalization.ts
+// 作者：Codex
+// 日期：2026-11-22
+
 import type { MRT_Localization } from 'material-react-table';
 import { MRT_Localization_AR } from 'material-react-table/locales/ar';
 import { MRT_Localization_CS } from 'material-react-table/locales/cs';
@@ -36,6 +42,7 @@ import { MRT_Localization_SV } from 'material-react-table/locales/sv';
 import { MRT_Localization_TR } from 'material-react-table/locales/tr';
 import { MRT_Localization_ZH_HANS } from 'material-react-table/locales/zh-Hans';
 import { MRT_Localization_ZH_HANT } from 'material-react-table/locales/zh-Hant';
+import { bbtBilingualLocale } from '../../../i18n/bbtLocale';
 
 const tableLocalizationMap: Partial<Record<string, MRT_Localization>> = {
   ar: MRT_Localization_AR,
@@ -58,6 +65,7 @@ const tableLocalizationMap: Partial<Record<string, MRT_Localization>> = {
   sv: MRT_Localization_SV,
   tr: MRT_Localization_TR,
   zh: MRT_Localization_ZH_HANS,
+  [bbtBilingualLocale]: MRT_Localization_ZH_HANS,
   'zh-TW': MRT_Localization_ZH_HANT,
 };
 

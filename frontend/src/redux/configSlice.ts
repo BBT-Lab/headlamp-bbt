@@ -19,6 +19,8 @@ import { createSlice } from '@reduxjs/toolkit';
 import type { Cluster } from '../lib/k8s/cluster';
 
 export interface ConfigState {
+  /** 当前浏览器会话是否展开全部已授权集群。 */
+  showAllClusters?: boolean;
   /**
    * Clusters is a map of cluster names to cluster objects.
    * Null indicates that the clusters have not been loaded yet.
@@ -222,6 +224,9 @@ const configSlice = createSlice({
   name: 'config',
   initialState,
   reducers: {
+    setShowAllClusters(state, action: PayloadAction<boolean>) {
+      state.showAllClusters = action.payload;
+    },
     /**
      * Save the config. To both the store, and localStorage.
      * @param state - The current state.
@@ -292,6 +297,7 @@ const configSlice = createSlice({
   },
 });
 
-export const { setConfig, setAppSettings, setStatelessConfig } = configSlice.actions;
+export const { setConfig, setAppSettings, setStatelessConfig, setShowAllClusters } =
+  configSlice.actions;
 
 export default configSlice.reducer;

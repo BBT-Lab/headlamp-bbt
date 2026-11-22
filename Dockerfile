@@ -65,6 +65,15 @@ RUN mkdir -p ./plugins
 RUN for i in $(find ./plugins-old/*/main.js); do plugin_name=$(echo $i|cut -d'/' -f3); mkdir -p plugins/$plugin_name; cp $i plugins/$plugin_name; done
 RUN for i in $(find ./plugins-old/*/package.json); do plugin_name=$(echo $i|cut -d'/' -f3); mkdir -p plugins/$plugin_name; cp $i plugins/$plugin_name; done
 
+# Headlamp BBT自带的插件与翻译资源。
+FROM frontend-build AS bbt-plugins
+WORKDIR /headlamp/plugins/bbt/headlamp-plus
+COPY ./plugins/bbt/headlamp-plus/package*.json ./
+RUN --mount=type=cache,target=/root/.npm npm ci
+COPY ./plugins/bbt/headlamp-plus ./
+COPY ./frontend/src/lib/k8s/podDisplayPhase.ts /headlamp/frontend/src/lib/k8s/podDisplayPhase.ts
+RUN npm run build
+
 # Static (officially shipped) plugins
 FROM --platform=${BUILDPLATFORM} frontend-build AS static-plugins
 RUN apt-get update && apt-get install -y jq
@@ -92,6 +101,7 @@ COPY --from=backend-build --link /headlamp/backend/headlamp-server /headlamp/hea
 COPY --from=frontend --link /headlamp/frontend/build /headlamp/frontend
 COPY --from=frontend --link /headlamp/plugins /headlamp/plugins
 COPY --from=static-plugins --link /plugins /headlamp/static-plugins
+COPY --from=bbt-plugins --link /headlamp/.plugins/headlamp-plus /headlamp/static-plugins/headlamp-plus
 
 RUN chown -R headlamp:headlamp /headlamp
 USER headlamp

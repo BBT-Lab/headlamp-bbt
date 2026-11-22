@@ -14,13 +14,20 @@
  * limitations under the License.
  */
 
+// 文件描述：为桌面窗口加载与网页一致的语言。
+// 项目名称：Headlamp BBT
+// 文件名称：i18next.config.ts
+// 作者：Codex
+// 日期：2026-11-22
+
 import i18next from 'i18next';
 import { CURRENT_LOCALES, LOCALES_DIR } from './i18n-helper';
 import { createJsonBackend } from './i18nextJsonBackend';
 
 i18next.use(createJsonBackend(LOCALES_DIR)).init({
   debug: process.env.NODE_ENV === 'development',
-  fallbackLng: 'en',
+  // 桌面主进程会在收到网页选择后切换语言。双语模式复用简体中文菜单。
+  fallbackLng: { 'zh-x-bbt': ['zh', 'en'], default: ['en'] },
   supportedLngs: CURRENT_LOCALES,
   // CURRENT_LOCALES comes from the lowercase locale directory names, so region codes
   // like pt-BR have to be lowercased to match them and to resolve the load path.

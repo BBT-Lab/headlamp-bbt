@@ -1,3 +1,9 @@
+// 文件描述：Headlamp的BBT单点登录与用户权限适配。
+// 项目名称：Headlamp BBT
+// 文件名称：headlampConfig.go
+// 作者：Codex
+// 日期：2026-11-19
+
 package headlampconfig
 
 import (
@@ -26,6 +32,7 @@ type HeadlampConfig struct {
 	OidcClientSecret          string
 	OidcIdpIssuerURL          string
 	OidcCallbackURL           string
+	RancherURL                string
 	OidcValidatorIdpIssuerURL string
 	OidcUseAccessToken        bool
 	OidcSkipTLSVerify         bool

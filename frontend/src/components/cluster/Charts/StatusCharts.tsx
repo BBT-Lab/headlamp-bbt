@@ -22,6 +22,7 @@ import { useTranslation } from 'react-i18next';
 import { useHistory } from 'react-router-dom';
 import Node from '../../../lib/k8s/node';
 import Pod from '../../../lib/k8s/pod';
+import { podDisplayPhase } from '../../../lib/k8s/podDisplayPhase';
 import { createRouteURL } from '../../../lib/router/createRouteURL';
 import Link from '../../common/Link';
 import TileChart from '../../common/TileChart';
@@ -35,7 +36,7 @@ export function PodsStatusCircleChart(props: { items: Pod[] | null }) {
   const { t } = useTranslation(['translation', 'glossary']);
 
   const podsReady = (items || []).filter((pod: Pod) => {
-    if (pod.status?.phase === 'Succeeded') {
+    if (podDisplayPhase(pod) === 'Succeeded') {
       return true;
     }
     const readyCondition = pod.status?.conditions?.find(

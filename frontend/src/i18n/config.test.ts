@@ -14,9 +14,34 @@
  * limitations under the License.
  */
 
+// 文件描述：验证默认语言、术语回退和语言切换。
+// 项目名称：Headlamp BBT
+// 文件名称：config.test.ts
+// 作者：Codex
+// 日期：2026-11-22
+
+import { bbtBilingualLocale } from './bbtLocale';
 import i18next from './config';
 
 describe('i18n configuration', () => {
+  it('starts with the bilingual locale and uses Chinese for ordinary text', async () => {
+    localStorage.removeItem('i18nextLng');
+    await i18next.changeLanguage();
+    expect(i18next.resolvedLanguage).toBe(bbtBilingualLocale);
+    expect(i18next.t('Namespace')).toBe('命名空间 (Namespace)');
+    expect(i18next.t('Connect')).toBe('连接');
+  });
+
+  it('keeps the Chinese and English language choices distinct', async () => {
+    await i18next.changeLanguage('zh');
+    expect(i18next.t('Namespace')).toBe('命名空间');
+    expect(i18next.t('Connect')).toBe('连接');
+
+    await i18next.changeLanguage('en');
+    expect(i18next.t('Namespace')).toBe('Namespace');
+    expect(i18next.t('Connect')).toBe('Connect');
+  });
+
   // "pt" is the region-less preference stored by earlier versions.
   it.each([
     ['pt-PT', 'pt-PT'],

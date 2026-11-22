@@ -1,3 +1,9 @@
+// 文件描述：Headlamp的BBT单点登录与用户权限适配。
+// 项目名称：Headlamp BBT
+// 文件名称：config.go
+// 作者：Codex
+// 日期：2026-11-19
+
 package config
 
 import (
@@ -83,6 +89,7 @@ type Config struct {
 	OidcScopes                   string `koanf:"oidc-scopes"`
 	OidcUseAccessToken           bool   `koanf:"oidc-use-access-token"`
 	OidcUseCookie                bool   `koanf:"oidc-use-cookie"`
+	RancherURL                   string `koanf:"rancher-url"`
 	OidcUseTokenBroadcast        bool   `koanf:"oidc-use-token-broadcast"`
 	OidcSkipTLSVerify            bool   `koanf:"oidc-skip-tls-verify"`
 	OidcSkipLogout               bool   `koanf:"oidc-skip-logout"`
@@ -153,7 +160,7 @@ func (c *Config) Validate() error {
 		logger.Log(logger.LevelWarn, nil, nil, "oidc-skip-tls-verify is set, this is not safe for production")
 	}
 
-	if err := c.validateOIDCCAFile(); err != nil {
+	if err := c.validateOIDCSetup(); err != nil {
 		return err
 	}
 
@@ -371,7 +378,7 @@ func setKubeConfigPath(config *Config) error {
 		return nil
 	}
 
-	if config.InCluster {
+	if config.InCluster || config.RancherURL != "" {
 		return nil
 	}
 
@@ -673,6 +680,7 @@ func addOIDCFlags(f *flag.FlagSet) {
 	f.String("oidc-ca-file", "", "CA file for OIDC")
 	f.Bool("oidc-use-access-token", false, "Setup oidc to pass through the access_token instead of the default id_token")
 	f.Bool("oidc-use-cookie", false, "Enable OIDC cookie usage even when not running in-cluster")
+	f.String("rancher-url", "", "Rancher HTTPS origin for OIDC login and per-user cluster discovery")
 	f.Bool("oidc-use-token-broadcast", false,
 		"After a successful OIDC login, also set the auth cookie for other kubeconfig contexts "+
 			"whose OIDC auth-provider has the same idp-issuer-url and client-id. Disabled by "+

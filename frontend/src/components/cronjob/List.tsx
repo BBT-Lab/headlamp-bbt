@@ -14,8 +14,15 @@
  * limitations under the License.
  */
 
+// 文件描述：呈现定时作业列表和本地化调度说明。
+// 项目名称：Headlamp BBT
+// 文件名称：List.tsx
+// 作者：Codex
+// 日期：2026-11-22
+
 import cronstrue from 'cronstrue/i18n';
 import { useTranslation } from 'react-i18next';
+import { bbtBilingualLocale } from '../../i18n/bbtLocale';
 import CronJob from '../../lib/k8s/cronJob';
 import { DateLabel } from '../common/Label';
 import { HoverInfoLabel } from '../common/Label';
@@ -27,7 +34,9 @@ export function getSchedule(cronJob: CronJob, locale: string) {
   let described = '';
   if (!schedule.startsWith('@')) {
     try {
-      described = cronstrue.toString(schedule, { locale });
+      described = cronstrue.toString(schedule, {
+        locale: locale === 'zh' || locale === bbtBilingualLocale ? 'zh_CN' : locale,
+      });
     } catch (e) {
       console.debug(
         `Could not describe cron "${schedule}" for cronJob ${cronJob.metadata.namespace}/${cronJob.metadata.name}:`,

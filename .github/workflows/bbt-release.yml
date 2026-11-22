@@ -6,11 +6,6 @@
 name: Headlamp BBT Release
 on:
   workflow_dispatch:
-    inputs:
-      version:
-        description: '版本号，例如0.0.1'
-        required: true
-        type: string
 
 concurrency:
   group: headlamp-bbt-release
@@ -29,16 +24,12 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+          fetch-depth: 0
       - name: 生成BBT版本
         id: version
-        env:
-          VERSION: ${{ inputs.version }}
         run: |
-          if [[ ! "$VERSION" =~ ^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]]; then
-            echo '版本号须采用MAJOR.MINOR.PATCH格式'
-            exit 1
-          fi
-          tag="v${VERSION}-bbt-$(TZ=Asia/Hong_Kong date +%y%m%d%H%M)"
+          node --test .github/scripts/bbt-release-tag.test.mjs
+          tag="$(node .github/scripts/bbt-release-tag.mjs)"
           echo "tag=$tag" >> "$GITHUB_OUTPUT"
           jq -n --arg version "$tag" '{product: {productName: "Headlamp BBT", version: $version}}' > app/bbt-build-manifest.json
       - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.0
@@ -67,7 +58,8 @@ jobs:
           [[ $(stat -c%s headlamp-image.oci.tar) -lt 2147483648 ]]
           printf '%s\n' "$DIGEST" > headlamp-image.digest
           helm template headlamp charts/headlamp --namespace headlamp \
-            -f deploy/web/values.yaml --set-string "image.tag=$TAG@$DIGEST" > headlamp.yaml
+            -f deploy/web/values.yaml -f deploy/web/sso-values.yaml \
+            --set-string "image.tag=$TAG@$DIGEST" > headlamp.yaml
           printf 'Headlamp BBT %s\n\n容器镜像：%s:%s@%s\n' "$TAG" "$IMAGE" "$TAG" "$DIGEST" > release-notes.md
           gh release create "$TAG" headlamp.yaml deploy/web/kustomization.yaml headlamp-image.oci.tar headlamp-image.digest \
             --target "$GITHUB_SHA" --title "$TAG" --notes-file release-notes.md

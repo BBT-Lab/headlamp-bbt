@@ -23,6 +23,7 @@ import { getProductName } from '../../helpers/getProductInfo';
 import { getCluster, getSelectedClusters } from '../../lib/cluster';
 import { useCluster, useClustersConf } from '../../lib/k8s';
 import { testAuth } from '../../lib/k8s/api/v1/clusterApi';
+import { useClusterDisplayName } from '../../lib/k8s/useClusterPresentation';
 import { createRouteURL } from '../../lib/router/createRouteURL';
 import { getDefaultRoutes } from '../../lib/router/getDefaultRoutes';
 import { getRoutePath } from '../../lib/router/getRoutePath';
@@ -130,11 +131,12 @@ function PageTitle({
   children: React.ReactNode;
 }) {
   const cluster = useCluster();
+  const clusterName = useClusterDisplayName(cluster);
 
   React.useEffect(() => {
     const productName = getProductName() || 'Headlamp';
-    document.title = [cluster, title, productName].filter(Boolean).join(' - ');
-  }, [cluster, title]);
+    document.title = [clusterName, title, productName].filter(Boolean).join(' - ');
+  }, [clusterName, title]);
 
   return <>{children}</>;
 }

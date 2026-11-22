@@ -14,6 +14,12 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+// 文件描述：Headlamp的BBT单点登录与用户权限适配。
+// 项目名称：Headlamp BBT
+// 文件名称：stateless.go
+// 作者：Codex
+// 日期：2026-11-19
+
 package main
 
 import (
@@ -271,6 +277,14 @@ func (c *HeadlampConfig) getContextKeyForRequest(r *http.Request) (string, error
 	var contextKey string
 
 	clusterName := mux.Vars(r)["clusterName"]
+	if c.rancher != nil {
+		identity, err := requestRancherIdentity(r)
+		if err != nil {
+			return "", err
+		}
+
+		return statelessContextKey(clusterName, identity.SessionKey), nil
+	}
 
 	// checking if kubeConfig exists, if not check if the request headers for kubeConfig information
 	kubeConfig := r.Header.Get("KUBECONFIG")

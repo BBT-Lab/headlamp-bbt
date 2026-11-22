@@ -14,12 +14,19 @@
  * limitations under the License.
  */
 
+// 文件描述：显示界面语言选项并保存选择。
+// 项目名称：Headlamp BBT
+// 文件名称：LocaleSelect.tsx
+// 作者：Codex
+// 日期：2026-11-22
+
 import FormControl, { FormControlProps } from '@mui/material/FormControl';
 import FormLabel from '@mui/material/FormLabel';
 import MenuItem from '@mui/material/MenuItem';
 import Select, { SelectChangeEvent } from '@mui/material/Select';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
+import { bbtBilingualLocale } from '../bbtLocale';
 import { supportedLanguages } from '../config';
 
 export interface LocaleSelectProps {
@@ -102,7 +109,11 @@ export default function LocaleSelect(props: LocaleSelectProps) {
           .filter(lng => lng !== 'cimode')
           .map(lng => (
             <MenuItem value={lng} key={lng}>
-              {showFullNames ? fullNames[lng] : lng}
+              {lng === bbtBilingualLocale
+                ? supportedLanguages[lng].label
+                : showFullNames
+                ? fullNames[lng]
+                : lng}
             </MenuItem>
           ))}
       </Select>

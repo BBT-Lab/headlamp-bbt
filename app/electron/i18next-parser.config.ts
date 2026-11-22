@@ -27,7 +27,8 @@ export default {
   defaultNamespace: 'app',
   contextSeparator: sharedConfig.contextSeparator,
   output: path.join(LOCALES_DIR, '$LOCALE/$NAMESPACE.json'),
-  locales: CURRENT_LOCALES.length > 0 ? CURRENT_LOCALES : ['en'],
+  // 双语目录只维护术语覆盖，基础文案由简体中文提供。
+  locales: CURRENT_LOCALES.filter(locale => locale !== 'zh-x-bbt'),
   // The English catalog has "SomeKey": "SomeKey" so we stop warnings about
   // missing values.
   useKeysAsDefaultValue: (locale: string) => locale === 'en',

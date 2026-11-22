@@ -32,8 +32,8 @@ import { useDispatch } from 'react-redux';
 import { useHistory } from 'react-router';
 import { FixedSizeList, ListChildComponentProps } from 'react-window';
 import { getAutoConnectClusterNames } from '../../../helpers/clusterAutoConnect';
-import { useClustersConf } from '../../../lib/k8s';
 import Event, { useEventWarningList } from '../../../lib/k8s/event';
+import { useVisibleClustersConf } from '../../../lib/k8s/useClusterPresentation';
 import { createRouteURL } from '../../../lib/router/createRouteURL';
 import { useTypedSelector } from '../../../redux/hooks';
 import Empty from '../../common/EmptyContent';
@@ -158,7 +158,7 @@ export default function Notifications() {
   const [anchorEl, setAnchorEl] = useState(null);
   const notifications = useTypedSelector(state => state.notifications.notifications);
   const dispatch = useDispatch();
-  const clusters = useClustersConf();
+  const clusters = useVisibleClustersConf();
   // Only fetch warnings for auto-connect (recently-used) clusters to avoid a
   // credential/exec process per cluster from the always-mounted bell.
   const warnings = useEventWarningList(

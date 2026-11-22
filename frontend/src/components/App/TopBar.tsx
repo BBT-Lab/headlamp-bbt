@@ -38,6 +38,7 @@ import { logout } from '../../lib/auth';
 import { useCluster, useClustersConf, useSelectedClusters } from '../../lib/k8s';
 import { ClusterUserInfo, getClusterUserInfo } from '../../lib/k8s/api/v1/clusterApi';
 import { canLogoutFromProvider } from '../../lib/k8s/clusterAuthType';
+import { clusterDisplayName } from '../../lib/k8s/clusterPresentation';
 import { redirectToOIDCLogout } from '../../lib/oidcLogout';
 import { createRouteURL } from '../../lib/router/createRouteURL';
 import {
@@ -311,6 +312,7 @@ export const PureTopBar = memo(
     const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
     const [mobileMoreAnchorEl, setMobileMoreAnchorEl] = React.useState<null | HTMLElement>(null);
     const isClusterContext = !!cluster;
+    const displayClusterName = cluster ? clusterDisplayName(clusters?.[cluster], cluster) : '';
     const isClusterTitleVisible = useClusterTitleVisible(cluster, clusters);
 
     const isMenuOpen = Boolean(anchorEl);
@@ -392,7 +394,7 @@ export const PureTopBar = memo(
                     {t('Log out')}: {getUserDisplayName(cluster, clusterUserInfoMap)}
                   </Typography>
                   <Typography variant="caption" color="text.secondary" component="span">
-                    {cluster}
+                    {displayClusterName}
                   </Typography>
                 </Box>
               ) : (

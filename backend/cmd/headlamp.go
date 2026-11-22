@@ -14,6 +14,12 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+// 文件描述：Headlamp的BBT单点登录与用户权限适配。
+// 项目名称：Headlamp BBT
+// 文件名称：headlamp.go
+// 作者：Codex
+// 日期：2026-11-19
+
 package main
 
 import (
@@ -91,6 +97,7 @@ type HeadlampConfig struct {
 	proxyURLMu        sync.Mutex
 	compiledProxyURLs []glob.Glob
 	oidcStateReader   io.Reader
+	rancher           *rancherIntegration
 }
 
 func compileProxyURLPatterns(patterns []string) ([]glob.Glob, error) {
@@ -926,11 +933,13 @@ func createHeadlampHandler(ctx context.Context, config *HeadlampConfig) http.Han
 			config.Cache,
 		)
 		// in-cluster mode is unlikely to want reloading kubeconfig.
-		go kubeconfig.LoadAndWatchFiles(ctx, config.KubeConfigStore, kubeConfigPath, kubeconfig.KubeConfig, skipFunc)
+		if config.RancherURL == "" {
+			go kubeconfig.LoadAndWatchFiles(ctx, config.KubeConfigStore, kubeConfigPath, kubeconfig.KubeConfig, skipFunc)
+		}
 	}
 
 	// In-cluster
-	if config.UseInCluster {
+	if config.UseInCluster && config.RancherURL == "" {
 		setupInClusterContext(config)
 	}
 
@@ -956,7 +965,9 @@ func createHeadlampHandler(ctx context.Context, config *HeadlampConfig) http.Han
 	logger.Log(logger.LevelInfo, nil, nil, "  API Routers:")
 
 	// load kubeConfig clusters
-	loadKubeConfigClusters(config, kubeConfigPath, skipFunc)
+	if config.RancherURL == "" {
+		loadKubeConfigClusters(config, kubeConfigPath, skipFunc)
+	}
 
 	// Prometheus metrics endpoint
 	// to enable this endpoint, run command run-backend-with-metrics
@@ -967,11 +978,13 @@ func createHeadlampHandler(ctx context.Context, config *HeadlampConfig) http.Han
 	}
 
 	// load dynamic clusters
-	kubeConfigPersistenceFile, err := defaultHeadlampKubeConfigFile(config.KubeConfigDir)
-	if err != nil {
-		logger.Log(logger.LevelError, nil, err, "getting default kubeconfig persistence file")
-	} else {
-		loadDynamicClusters(config, kubeConfigPersistenceFile, skipFunc)
+	if config.RancherURL == "" {
+		kubeConfigPersistenceFile, err := defaultHeadlampKubeConfigFile(config.KubeConfigDir)
+		if err != nil {
+			logger.Log(logger.LevelError, nil, err, "getting default kubeconfig persistence file")
+		} else {
+			loadDynamicClusters(config, kubeConfigPersistenceFile, skipFunc)
+		}
 	}
 
 	addPluginRoutes(config, r)
@@ -1353,6 +1366,9 @@ func createHeadlampHandler(ctx context.Context, config *HeadlampConfig) http.Han
 	r.HandleFunc("/oidc", func(w http.ResponseWriter, r *http.Request) {
 		ctx := context.Background()
 		cluster := r.URL.Query().Get("cluster")
+		if config.rancher != nil {
+			cluster = config.rancher.login
+		}
 
 		if config.Insecure {
 			baseTransport, ok := http.DefaultTransport.(*http.Transport)
@@ -1545,15 +1561,24 @@ func createHeadlampHandler(ctx context.Context, config *HeadlampConfig) http.Han
 			tokenType = "access_token"
 		}
 
-		rawUserToken, ok := oauth2Token.Extra(tokenType).(string)
-		if !ok {
-			logger.Log(logger.LevelError, nil, err, fmt.Sprintf("no %s field in oauth2 token", tokenType))
+		rawUserToken, err := auth.OIDCUserToken(oauth2Token, config.OidcUseAccessToken)
+		if err != nil {
+			logger.Log(logger.LevelError, nil, err, "OIDC response is missing a user token")
 			http.Error(w, fmt.Sprintf("No %s field in oauth2 token.", tokenType), http.StatusInternalServerError)
 
 			return
 		}
 
-		idToken, err := oauthConfig.Verifier.Verify(oauthConfig.Ctx, rawUserToken)
+		verificationToken := rawUserToken
+		if config.rancher != nil {
+			verificationToken, err = auth.OIDCUserToken(oauth2Token, false)
+			if err != nil {
+				http.Error(w, "Rancher登录缺少ID token", http.StatusBadGateway)
+				return
+			}
+		}
+
+		idToken, err := oauthConfig.Verifier.Verify(oauthConfig.Ctx, verificationToken)
 		if err != nil {
 			logger.Log(logger.LevelError, nil, err, "failed to verify ID Token")
 			http.Error(w, "Failed to verify ID Token: "+err.Error(), http.StatusInternalServerError)
@@ -1570,6 +1595,11 @@ func createHeadlampHandler(ctx context.Context, config *HeadlampConfig) http.Han
 			logger.Log(logger.LevelError, nil, err, "failed to get id token claims")
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 
+			return
+		}
+
+		if config.rancher != nil {
+			config.completeRancherLogin(w, r, oauthConfig, oauth2Token)
 			return
 		}
 
@@ -1928,13 +1958,20 @@ func hostValidationMiddleware(listenAddr string, port uint) func(http.Handler) h
 }
 
 func serverHandler(ctx context.Context, config *HeadlampConfig) (http.Handler, error) {
+	if err := setupRancher(ctx, config); err != nil {
+		return nil, err
+	}
 	handler := createHeadlampHandler(ctx, config)
 
 	if err := startClusterInventory(ctx, config); err != nil {
 		return nil, err
 	}
 
-	handler = config.OIDCTokenRefreshMiddleware(handler)
+	if config.rancher != nil {
+		handler = config.rancherMiddleware(handler)
+	} else {
+		handler = config.OIDCTokenRefreshMiddleware(handler)
+	}
 
 	// Only validate the Host header when listening on a loopback address.
 	// When bound to a non-loopback address (e.g. behind a reverse proxy),
@@ -1973,7 +2010,7 @@ func StartHeadlampServer(config *HeadlampConfig) {
 
 	handler, err := serverHandler(ctx, config)
 	if err != nil {
-		logger.Log(logger.LevelError, nil, err, "starting cluster inventory discovery")
+		logger.Log(logger.LevelError, nil, err, "creating Headlamp HTTP handler")
 		return
 	}
 
@@ -2716,8 +2753,15 @@ func parseClusterFromKubeConfig(kubeConfigs []string) ([]Cluster, []error) {
 func (c *HeadlampConfig) getConfig(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
+	clusters := c.getClusters()
+	if c.rancher != nil {
+		clusters = c.rancherClusters(r)
+
+		w.Header().Set("Cache-Control", "no-store")
+	}
+
 	cc := clientConfig{
-		Clusters:                  c.getClusters(),
+		Clusters:                  clusters,
 		IsDynamicClusterEnabled:   c.EnableDynamicClusters,
 		AllowKubeconfigChanges:    c.AllowKubeconfigChanges,
 		DefaultPodDebugImage:      c.PodDebugImage,

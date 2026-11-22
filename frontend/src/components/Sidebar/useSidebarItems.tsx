@@ -22,6 +22,7 @@ import { useTranslation } from 'react-i18next';
 import { getClusterAppearanceFromMeta } from '../../helpers/clusterAppearance';
 import { isElectron } from '../../helpers/isElectron';
 import { useClustersConf, useSelectedClusters } from '../../lib/k8s';
+import { clusterDisplayName } from '../../lib/k8s/clusterPresentation';
 import CompositePodGroup from '../../lib/k8s/compositePodGroup';
 import CRD from '../../lib/k8s/crd';
 import DeviceClass from '../../lib/k8s/deviceClass';
@@ -65,7 +66,10 @@ export const useSidebarItems = (sidebarName: string = DefaultSidebars.IN_CLUSTER
   const customSidebarEntries = useTypedSelector(state => state.sidebar.entries);
   const customSidebarFilters = useTypedSelector(state => state.sidebar.filters);
   const customHomeSidebarFilters = useTypedSelector(state => state.sidebar.homeFilters);
-  const shouldShowHomeItem = isElectron() || Object.keys(clusters).length !== 1;
+  const shouldShowHomeItem =
+    isElectron() ||
+    Object.keys(clusters).length !== 1 ||
+    Object.values(clusters).some(cluster => cluster.meta_data?.hideByDefault === true);
   const selectedClusters = useSelectedClusters();
   const allClustersConf = useClustersConf();
   const { t } = useTranslation();
@@ -178,7 +182,7 @@ export const useSidebarItems = (sidebarName: string = DefaultSidebars.IN_CLUSTER
             return (
               <ClusterBadge
                 key={clusterName}
-                name={clusterName}
+                name={clusterDisplayName(allClustersConf?.[clusterName], clusterName)}
                 accentColor={
                   appearance.accentColor ||
                   theme.palette.getContrastText(theme.palette.text.primary)
@@ -255,7 +259,8 @@ export const useSidebarItems = (sidebarName: string = DefaultSidebars.IN_CLUSTER
           },
           {
             name: 'advancedSearch',
-            label: t('Advanced Search (Beta)'),
+            label: t('Advanced Search'),
+            featureStage: 'beta',
           },
         ],
       },
@@ -368,7 +373,8 @@ export const useSidebarItems = (sidebarName: string = DefaultSidebars.IN_CLUSTER
       },
       {
         name: 'gatewayapi',
-        label: t('glossary|Gateway (beta)'),
+        label: t('glossary|Gateway'),
+        featureStage: 'beta',
         icon: 'mdi:lan-connect',
         subList: [
           {
@@ -496,7 +502,8 @@ export const useSidebarItems = (sidebarName: string = DefaultSidebars.IN_CLUSTER
     if (devicesEnabled) {
       inClusterItems.push({
         name: 'devices',
-        label: t('glossary|Devices (alpha)'),
+        label: t('translation|Devices'),
+        featureStage: 'alpha',
         icon: 'mdi:expansion-card',
         subList: [
           {
@@ -518,7 +525,8 @@ export const useSidebarItems = (sidebarName: string = DefaultSidebars.IN_CLUSTER
     if (schedulingWorkloadsEnabled) {
       inClusterItems.push({
         name: 'scheduling',
-        label: t('glossary|Scheduling (alpha)'),
+        label: t('glossary|Scheduling'),
+        featureStage: 'alpha',
         icon: 'mdi:group',
         subList: [
           {

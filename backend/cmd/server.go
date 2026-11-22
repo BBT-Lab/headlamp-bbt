@@ -14,6 +14,12 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+// 文件描述：Headlamp的BBT单点登录与用户权限适配。
+// 项目名称：Headlamp BBT
+// 文件名称：server.go
+// 作者：Codex
+// 日期：2026-11-19
+
 package main
 
 import (
@@ -221,6 +227,7 @@ func createHeadlampConfig(conf *config.Config) *HeadlampConfig {
 		OidcValidatorClientID:     conf.OidcValidatorClientID,
 		OidcClientSecret:          conf.OidcClientSecret,
 		OidcIdpIssuerURL:          conf.OidcIdpIssuerURL,
+		RancherURL:                conf.RancherURL,
 		OidcCallbackURL:           conf.OidcCallbackURL,
 		OidcValidatorIdpIssuerURL: conf.OidcValidatorIdpIssuerURL,
 		OidcScopes:                strings.Split(conf.OidcScopes, ","),

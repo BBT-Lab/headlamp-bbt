@@ -14,11 +14,18 @@
  * limitations under the License.
  */
 
+// 文件描述：设置资源编辑器的语言和静态资源路径。
+// 项目名称：Headlamp BBT
+// 文件名称：MonacoEditorLoaderInitializer.tsx
+// 作者：Codex
+// 日期：2026-11-22
+
 import { loader } from '@monaco-editor/react';
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { getBaseUrl } from '../../helpers/getBaseUrl';
 import { isElectron } from '../../helpers/isElectron';
+import { bbtBilingualLocale } from '../../i18n/bbtLocale';
 import { makeUrl } from '../../lib/k8s/api/v2/makeUrl';
 
 /**
@@ -34,6 +41,7 @@ export function MonacoEditorLoaderInitializer({ children }: React.PropsWithChild
   // inside the initializer of a useState, because that runs before the first render
   useState(() => {
     // We also set the language for Monaco to load if it's available; but this only happens once, changing language is not supported
+    const language = ['zh', bbtBilingualLocale].includes(i18n.language) ? 'zh-cn' : i18n.language;
     const isLanguageSupported = [
       'de',
       'es',
@@ -44,7 +52,7 @@ export function MonacoEditorLoaderInitializer({ children }: React.PropsWithChild
       'ru',
       'zh-cn',
       'zh-tw',
-    ].includes(i18n.language);
+    ].includes(language);
 
     // Configure the monaco loader to load its scripts from the "assets/vs" local url instead of the default internet-based CDN.
     // This needs to include the origin and not just a relative path because it is used as a fetch
@@ -64,7 +72,7 @@ export function MonacoEditorLoaderInitializer({ children }: React.PropsWithChild
       paths: {
         vs: url,
       },
-      ...(isLanguageSupported ? { 'vs/nls': { availableLanguages: { '*': i18n.language } } } : {}),
+      ...(isLanguageSupported ? { 'vs/nls': { availableLanguages: { '*': language } } } : {}),
     });
   });
 

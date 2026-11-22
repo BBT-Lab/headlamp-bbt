@@ -32,7 +32,7 @@ import { useDispatch } from 'react-redux';
 import { generatePath, useHistory, useLocation, useRouteMatch } from 'react-router';
 import { FixedSizeList } from 'react-window';
 import { getCombinedAllowedNamespaces } from '../../helpers/clusterSettings';
-import { useClustersConf, useSelectedClusters } from '../../lib/k8s';
+import { useSelectedClusters } from '../../lib/k8s';
 import ConfigMap from '../../lib/k8s/configMap';
 import CronJob from '../../lib/k8s/cronJob';
 import Deployment from '../../lib/k8s/deployment';
@@ -51,6 +51,7 @@ import ReplicaSet from '../../lib/k8s/replicaSet';
 import Service from '../../lib/k8s/service';
 import ServiceAccount from '../../lib/k8s/serviceAccount';
 import StatefulSet from '../../lib/k8s/statefulSet';
+import { useVisibleClustersConf } from '../../lib/k8s/useClusterPresentation';
 import { createRouteURL } from '../../lib/router/createRouteURL';
 import { getDefaultRoutes } from '../../lib/router/getDefaultRoutes';
 import { getClusterPrefixedPath } from '../../lib/util';
@@ -184,7 +185,7 @@ export function GlobalSearchContent(props: GlobalSearchContentProps) {
   const history = useHistory();
   const dispatch = useDispatch();
   const [query, setQuery] = useState(defaultValue ?? '');
-  const clusters = useClustersConf() ?? {};
+  const clusters = useVisibleClustersConf() ?? {};
   const selectedClusters = useSelectedClusters();
   const drawerEnabled = useTypedSelector(state => state?.drawerMode?.isDetailDrawerEnabled);
   const drawerLocation = useTypedSelector(
@@ -364,7 +365,7 @@ export function GlobalSearchContent(props: GlobalSearchContentProps) {
     if (!query.trim() || selectedClusters.length === 0) return;
     return {
       id: 'advanced-search-suggestion',
-      subLabel: t('Advanced Search (Beta)'),
+      subLabel: t('Advanced Search'),
       icon: <Icon icon="mdi:search" />,
       label: `Search "${query}" with Advanced Search`,
       onClick: () => {

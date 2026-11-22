@@ -24,6 +24,7 @@ export interface ClusterChooserProps {
   clickHandler: (event?: React.MouseEvent<HTMLButtonElement, MouseEvent>) => void;
   cluster?: string;
   selectedClusters?: string[];
+  clusterDisplayNames?: Record<string, string>;
   icon?: string;
   accentColor?: string;
 }
@@ -33,19 +34,26 @@ export type ClusterChooserType =
   | null;
 
 const ClusterChooser = React.forwardRef(function ClusterChooser(
-  { clickHandler, cluster, selectedClusters, icon, accentColor }: ClusterChooserProps,
+  {
+    clickHandler,
+    cluster,
+    selectedClusters,
+    clusterDisplayNames,
+    icon,
+    accentColor,
+  }: ClusterChooserProps,
   ref: React.Ref<HTMLButtonElement>
 ) {
   const { t } = useTranslation();
 
-  const selected = selectedClusters ?? [];
+  const selected = (selectedClusters ?? []).map(name => clusterDisplayNames?.[name] ?? name);
   const multipleSelected = selected.length > 1;
   const MAX_INLINE_CLUSTERS = 2;
   const displayName = multipleSelected
     ? selected.length <= MAX_INLINE_CLUSTERS
       ? selected.join(', ')
       : t('{{count}} clusters', { count: selected.length })
-    : selected[0] ?? cluster ?? t('Cluster');
+    : selected[0] ?? (cluster ? clusterDisplayNames?.[cluster] ?? cluster : t('Cluster'));
 
   return (
     <Button

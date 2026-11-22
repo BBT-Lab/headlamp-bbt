@@ -1,5 +1,9 @@
 **/node_modules
+plugins/bbt/*/dist/
+/.plugins/headlamp-plus/
+/.plugins-user/
 backend/tools/
 docs/
 **/*.stories.*
 **/*.test.*
+/.env.bbt-sso.local

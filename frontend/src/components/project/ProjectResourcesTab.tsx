@@ -23,6 +23,7 @@ import DaemonSet from '../../lib/k8s/daemonSet';
 import Deployment from '../../lib/k8s/deployment';
 import { KubeObject } from '../../lib/k8s/KubeObject';
 import Pod from '../../lib/k8s/pod';
+import { podDisplayPhase } from '../../lib/k8s/podDisplayPhase';
 import ReplicaSet from '../../lib/k8s/replicaSet';
 import { getKubeObjectCategory, ResourceCategory } from '../../lib/k8s/ResourceCategory';
 import StatefulSet from '../../lib/k8s/statefulSet';
@@ -157,12 +158,12 @@ export function ProjectResourcesTab({
               return 'Degraded';
           } else if (kind === 'Pod') {
             const pod = resource as Pod;
-            const phase = pod.status?.phase;
+            const phase = podDisplayPhase(pod);
             const conditions = pod.status?.conditions || [];
             const ready = conditions.find((c: any) => c.type === 'Ready')?.status === 'True';
 
             if (phase === 'Failed' || phase === 'CrashLoopBackOff') return 'Failed';
-            if (phase === 'Pending' || !ready) return 'Pending';
+            if (phase !== 'Succeeded' && (phase === 'Pending' || !ready)) return 'Pending';
           }
           return 'Healthy';
         },
@@ -201,13 +202,13 @@ export function ProjectResourcesTab({
             }
           } else if (kind === 'Pod') {
             const pod = resource as Pod;
-            const phase = pod.status?.phase;
+            const phase = podDisplayPhase(pod);
             const conditions = pod.status?.conditions || [];
             const ready = conditions.find((c: any) => c.type === 'Ready')?.status === 'True';
 
             if (phase === 'Failed' || phase === 'CrashLoopBackOff') {
               healthText = 'Failed';
-            } else if (phase === 'Pending' || !ready) {
+            } else if (phase !== 'Succeeded' && (phase === 'Pending' || !ready)) {
               healthText = 'Pending';
             }
           }

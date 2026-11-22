@@ -22,6 +22,7 @@ import { useSelectedClusters } from '../../lib/k8s';
 import { apiDiscovery } from '../../lib/k8s/api/v2/apiDiscovery';
 import { apiResourceId } from '../../lib/k8s/api/v2/ApiResource';
 import { SectionHeader } from '../common';
+import FeatureStageBadge from '../common/FeatureStageBadge';
 import Loader from '../common/Loader';
 import { NamespacesAutocomplete } from '../common/NamespacesAutocomplete';
 import { useLocalStorageState } from '../globalSearch/useLocalStorageState';
@@ -144,7 +145,15 @@ export function AdvancedSearch() {
         margin: '0 auto',
       }}
     >
-      <SectionHeader title={t('Advanced Search (Beta)')} noPadding />
+      <SectionHeader
+        title={
+          <>
+            {t('Advanced Search')}
+            <FeatureStageBadge stage="beta" />
+          </>
+        }
+        noPadding
+      />
       <Box
         sx={{
           display: 'flex',

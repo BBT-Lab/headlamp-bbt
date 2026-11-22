@@ -21,6 +21,7 @@ import { useTranslation } from 'react-i18next';
 import { useLocation } from 'react-router-dom';
 import { useClustersConf } from '../../lib/k8s';
 import Namespace from '../../lib/k8s/namespace';
+import { useVisibleClustersConf } from '../../lib/k8s/useClusterPresentation';
 import { HeadlampEventType, useEventCallback } from '../../redux/headlampEventSlice';
 import { useTypedSelector } from '../../redux/hooks';
 import type { ProjectDefinition } from '../../redux/projectsSlice';
@@ -36,7 +37,7 @@ import { useProjectItems } from './useProjectResources';
 export { groupNamespacesIntoProjects } from './projectGrouping';
 
 const useProjects = (): ProjectDefinition[] => {
-  const clusterConf = useClustersConf();
+  const clusterConf = useVisibleClustersConf();
   const clusters = Object.values(clusterConf ?? {});
   const projectGrouping = useTypedSelector(state => state.projects.projectGrouping);
 
@@ -239,8 +240,8 @@ function ProjectListContent() {
  * @returns The gated project list.
  */
 export default function ProjectList() {
-  const clusterConf = useClustersConf();
-  const clusters = Object.values(clusterConf ?? {}).map(cluster => cluster.name);
+  const visibleClusterConf = useVisibleClustersConf();
+  const clusters = Object.values(visibleClusterConf ?? {}).map(cluster => cluster.name);
 
   return (
     <AllowedNamespacesSelectorGate clusters={clusters}>

@@ -33,21 +33,11 @@ export { ResourceClasses } from './resourceClasses';
  * @returns the clusters configuration.
  * */
 export function useClustersConf(): ConfigState['allClusters'] {
-  const state = useTypedSelector(state => state.config);
-  const clusters = _.cloneDeep(state.clusters || {});
-  const allClusters = _.cloneDeep(state.allClusters || {});
-  Object.assign(allClusters, clusters);
-
-  if (state.statelessClusters) {
-    // Combine statelessClusters with clusters
-    const statelessClusters = _.cloneDeep(state.statelessClusters || {});
-    Object.assign(allClusters, statelessClusters);
-  }
-
+  const { clusters, allClusters, statelessClusters } = useTypedSelector(state => state.config);
   return useMemo(
-    () => (state.clusters === null ? null : allClusters),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [state.clusters === null, Object.keys(allClusters).join(',')]
+    () =>
+      clusters === null ? null : _.cloneDeep({ ...allClusters, ...clusters, ...statelessClusters }),
+    [clusters, allClusters, statelessClusters]
   );
 }
 
