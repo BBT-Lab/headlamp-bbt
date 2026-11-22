@@ -15,6 +15,7 @@
             href="/"
             role="button"
             tabindex="0"
+            title="Cluster"
           >
             <div
               class="MuiListItemIcon-root css-1blhdvq-MuiListItemIcon-root"

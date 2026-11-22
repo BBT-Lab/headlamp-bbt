@@ -14,6 +14,12 @@
  * limitations under the License.
  */
 
+// 文件描述：编辑集群的外观和命名空间设置。
+// 项目名称：Headlamp BBT
+// 文件名称：SettingsCluster.tsx
+// 作者：Codex
+// 日期：2026-11-23
+
 import { Icon, InlineIcon } from '@iconify/react';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
@@ -234,7 +240,11 @@ export default function SettingsCluster() {
               }
             )}
           </Typography>
-          <ClusterSelector currentCluster={cluster} clusters={clusters} />
+          <ClusterSelector
+            currentCluster={cluster}
+            clusters={clusters}
+            clusterConfig={clusterConf}
+          />
         </SectionBox>
       </>
     );
@@ -253,7 +263,11 @@ export default function SettingsCluster() {
     <>
       <SectionBox title={t('translation|Cluster Settings')} backLink>
         <Box display="flex" justifyContent="space-between" alignItems="center">
-          <ClusterSelector clusters={clusters} currentCluster={cluster} />
+          <ClusterSelector
+            clusters={clusters}
+            currentCluster={cluster}
+            clusterConfig={clusterConf}
+          />
           <Link
             routeName="cluster"
             params={{ cluster: cluster }}

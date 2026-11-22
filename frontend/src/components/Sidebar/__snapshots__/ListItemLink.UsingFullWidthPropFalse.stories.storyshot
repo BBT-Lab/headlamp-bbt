@@ -15,6 +15,7 @@
               href="/full-width-false"
               role="button"
               tabindex="0"
+              title="Full Width False (Icon Only)"
             >
               <div
                 class="MuiListItemIcon-root css-1blhdvq-MuiListItemIcon-root"

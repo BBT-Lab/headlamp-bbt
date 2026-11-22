@@ -15,7 +15,15 @@
             <h1
               class="MuiTypography-root MuiTypography-h1 MuiTypography-noWrap css-yeaech-MuiTypography-root"
             >
-              Advanced Search (Beta)
+              Advanced Search
+              <sup
+                aria-label="Beta feature"
+                class="MuiBox-root css-rx4f4l"
+                data-mui-internal-clone-element="true"
+                role="img"
+              >
+                β
+              </sup>
             </h1>
             <div
               class="MuiBox-root css-ldp2l3"

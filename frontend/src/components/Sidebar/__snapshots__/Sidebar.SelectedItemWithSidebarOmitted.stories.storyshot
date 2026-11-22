@@ -27,6 +27,7 @@
                     href="/"
                     role="button"
                     tabindex="0"
+                    title="Home"
                   >
                     <div
                       class="MuiListItemIcon-root css-1blhdvq-MuiListItemIcon-root"
@@ -53,6 +54,7 @@
                     href="/"
                     role="button"
                     tabindex="0"
+                    title="Cluster"
                   >
                     <div
                       class="MuiListItemIcon-root css-1blhdvq-MuiListItemIcon-root"
@@ -79,6 +81,7 @@
                     href="/"
                     role="button"
                     tabindex="0"
+                    title="Map"
                   >
                     <div
                       class="MuiListItemIcon-root css-1blhdvq-MuiListItemIcon-root"
@@ -105,6 +108,7 @@
                     href="/"
                     role="button"
                     tabindex="0"
+                    title="Workloads"
                   >
                     <div
                       class="MuiListItemIcon-root css-1blhdvq-MuiListItemIcon-root"
@@ -144,6 +148,7 @@
                             href="/"
                             role="button"
                             tabindex="0"
+                            title="Pods"
                           >
                             <div
                               class="MuiListItemText-root css-tlelie-MuiListItemText-root"
@@ -167,6 +172,7 @@
                             href="/"
                             role="button"
                             tabindex="0"
+                            title="Deployments"
                           >
                             <div
                               class="MuiListItemText-root css-tlelie-MuiListItemText-root"
@@ -190,6 +196,7 @@
                             href="/"
                             role="button"
                             tabindex="0"
+                            title="Stateful Sets"
                           >
                             <div
                               class="MuiListItemText-root css-tlelie-MuiListItemText-root"
@@ -213,6 +220,7 @@
                             href="/"
                             role="button"
                             tabindex="0"
+                            title="Daemon Sets"
                           >
                             <div
                               class="MuiListItemText-root css-tlelie-MuiListItemText-root"
@@ -236,6 +244,7 @@
                             href="/"
                             role="button"
                             tabindex="0"
+                            title="Replica Sets"
                           >
                             <div
                               class="MuiListItemText-root css-tlelie-MuiListItemText-root"
@@ -259,6 +268,7 @@
                             href="/"
                             role="button"
                             tabindex="0"
+                            title="Jobs"
                           >
                             <div
                               class="MuiListItemText-root css-tlelie-MuiListItemText-root"
@@ -282,6 +292,7 @@
                             href="/"
                             role="button"
                             tabindex="0"
+                            title="CronJobs"
                           >
                             <div
                               class="MuiListItemText-root css-tlelie-MuiListItemText-root"
@@ -305,6 +316,7 @@
                             href="/"
                             role="button"
                             tabindex="0"
+                            title="Job Sets"
                           >
                             <div
                               class="MuiListItemText-root css-tlelie-MuiListItemText-root"
@@ -328,6 +340,7 @@
                             href="/"
                             role="button"
                             tabindex="0"
+                            title="Leader Worker Sets"
                           >
                             <div
                               class="MuiListItemText-root css-tlelie-MuiListItemText-root"
@@ -355,6 +368,7 @@
                     href="/"
                     role="button"
                     tabindex="0"
+                    title="Storage"
                   >
                     <div
                       class="MuiListItemIcon-root css-1blhdvq-MuiListItemIcon-root"
@@ -381,6 +395,7 @@
                     href="/"
                     role="button"
                     tabindex="0"
+                    title="Network"
                   >
                     <div
                       class="MuiListItemIcon-root css-1blhdvq-MuiListItemIcon-root"
@@ -407,6 +422,7 @@
                     href="/"
                     role="button"
                     tabindex="0"
+                    title="Gateway"
                   >
                     <div
                       class="MuiListItemIcon-root css-1blhdvq-MuiListItemIcon-root"
@@ -417,7 +433,15 @@
                       <span
                         class="MuiTypography-root MuiTypography-body1 MuiListItemText-primary css-nqgwvn-MuiTypography-root"
                       >
-                        Gateway (beta)
+                        Gateway
+                        <sup
+                          aria-label="Beta feature"
+                          class="MuiBox-root css-rx4f4l"
+                          data-mui-internal-clone-element="true"
+                          role="img"
+                        >
+                          β
+                        </sup>
                       </span>
                     </div>
                     <span
@@ -433,6 +457,7 @@
                     href="/"
                     role="button"
                     tabindex="0"
+                    title="Security"
                   >
                     <div
                       class="MuiListItemIcon-root css-1blhdvq-MuiListItemIcon-root"
@@ -459,6 +484,7 @@
                     href="/"
                     role="button"
                     tabindex="0"
+                    title="Configuration"
                   >
                     <div
                       class="MuiListItemIcon-root css-1blhdvq-MuiListItemIcon-root"
@@ -485,6 +511,7 @@
                     href="/"
                     role="button"
                     tabindex="0"
+                    title="Custom Resources"
                   >
                     <div
                       class="MuiListItemIcon-root css-1blhdvq-MuiListItemIcon-root"

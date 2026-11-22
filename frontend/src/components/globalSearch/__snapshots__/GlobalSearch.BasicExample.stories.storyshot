@@ -32,13 +32,13 @@
             <div
               class="MuiBox-root css-yqa0zz"
             >
-              Press
+              Press 
               <kbd
                 class="MuiBox-root css-a3hhso"
               >
                 /
               </kbd>
-              to search
+               to search
             </div>
             <fieldset
               aria-hidden="true"

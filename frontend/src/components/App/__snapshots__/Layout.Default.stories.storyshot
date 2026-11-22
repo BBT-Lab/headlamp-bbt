@@ -102,13 +102,13 @@
                     <div
                       class="MuiBox-root css-yqa0zz"
                     >
-                      Press
+                      Press 
                       <kbd
                         class="MuiBox-root css-a3hhso"
                       >
                         /
                       </kbd>
-                      to search
+                       to search
                     </div>
                     <fieldset
                       aria-hidden="true"
@@ -163,6 +163,7 @@
                           href="/"
                           role="button"
                           tabindex="0"
+                          title="Home"
                         >
                           <div
                             class="MuiListItemIcon-root css-1blhdvq-MuiListItemIcon-root"
@@ -189,6 +190,7 @@
                           href="/notifications"
                           role="button"
                           tabindex="0"
+                          title="Notifications"
                         >
                           <div
                             class="MuiListItemIcon-root css-1blhdvq-MuiListItemIcon-root"
@@ -215,6 +217,7 @@
                           href="/settings/general"
                           role="button"
                           tabindex="0"
+                          title="Settings"
                         >
                           <div
                             class="MuiListItemIcon-root css-1blhdvq-MuiListItemIcon-root"

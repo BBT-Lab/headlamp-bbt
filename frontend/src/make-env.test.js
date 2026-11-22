@@ -14,6 +14,12 @@
  * limitations under the License.
  */
 
+// 文件描述：验证构建元数据、来源提交和容器工作流。
+// 项目名称：Headlamp BBT
+// 文件名称：make-env.test.js
+// 作者：Codex
+// 日期：2026-11-23
+
 const os = require('os');
 const path = require('path');
 const { execFileSync } = require('child_process');
@@ -370,6 +376,7 @@ test('container workflows pass the checked-out source revision', () => {
     .filter(({ contents }) => contents.includes('docker/build-push-action@'));
 
   expect(dockerWorkflows.map(({ fileName }) => fileName).sort()).toEqual([
+    'bbt-release.yml',
     'build-other-arch.yml',
     'container-publish.yml',
     'nightly-build.yml',

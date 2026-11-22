@@ -28,6 +28,7 @@
                     href="/"
                     role="button"
                     tabindex="-1"
+                    title="Home"
                   >
                     <div
                       aria-label="Home"
@@ -48,6 +49,7 @@
                     href="/"
                     role="button"
                     tabindex="-1"
+                    title="Cluster"
                   >
                     <div
                       aria-label="Cluster"
@@ -68,6 +70,7 @@
                     href="/"
                     role="button"
                     tabindex="-1"
+                    title="Map"
                   >
                     <div
                       aria-label="Map"
@@ -88,6 +91,7 @@
                     href="/"
                     role="button"
                     tabindex="-1"
+                    title="Workloads"
                   >
                     <div
                       aria-label="Workloads"
@@ -108,6 +112,7 @@
                     href="/"
                     role="button"
                     tabindex="-1"
+                    title="Storage"
                   >
                     <div
                       aria-label="Storage"
@@ -128,6 +133,7 @@
                     href="/"
                     role="button"
                     tabindex="-1"
+                    title="Network"
                   >
                     <div
                       aria-label="Network"
@@ -143,14 +149,15 @@
                   class="css-3knmzx"
                 >
                   <a
-                    aria-label="Gateway (beta)"
+                    aria-label="Gateway"
                     class="MuiButtonBase-root MuiListItemButton-root MuiListItemButton-gutters MuiListItemButton-root MuiListItemButton-gutters css-1bad0xa-MuiButtonBase-root-MuiListItemButton-root"
                     href="/"
                     role="button"
                     tabindex="-1"
+                    title="Gateway"
                   >
                     <div
-                      aria-label="Gateway (beta)"
+                      aria-label="Gateway"
                       class="MuiListItemIcon-root css-1blhdvq-MuiListItemIcon-root"
                       data-mui-internal-clone-element="true"
                     />
@@ -168,6 +175,7 @@
                     href="/"
                     role="button"
                     tabindex="-1"
+                    title="Security"
                   >
                     <div
                       aria-label="Security"
@@ -188,6 +196,7 @@
                     href="/"
                     role="button"
                     tabindex="-1"
+                    title="Configuration"
                   >
                     <div
                       aria-label="Configuration"
@@ -208,6 +217,7 @@
                     href="/"
                     role="button"
                     tabindex="-1"
+                    title="Custom Resources"
                   >
                     <div
                       aria-label="Custom Resources"
