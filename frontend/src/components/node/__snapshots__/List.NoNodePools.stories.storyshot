@@ -176,7 +176,7 @@
               </div>
             </div>
             <table
-              class="MuiTable-root css-1drzxj3-MuiTable-root"
+              class="MuiTable-root css-1vlmfc9-MuiTable-root"
             >
               <thead
                 class="MuiTableHead-root css-1tmrira-MuiTableHead-root"
@@ -308,12 +308,12 @@
                           CPU
                         </div>
                         <span
-                          aria-label="Sort by CPU descending"
+                          aria-label="Sort by CPU ascending"
                           class="MuiBadge-root css-1c32n2y-MuiBadge-root"
                           data-mui-internal-clone-element="true"
                         >
                           <span
-                            aria-label="Sort by CPU descending"
+                            aria-label="Sort by CPU ascending"
                             class="MuiButtonBase-root MuiTableSortLabel-root Mui-active css-542clt-MuiButtonBase-root-MuiTableSortLabel-root"
                             role="button"
                             tabindex="0"
@@ -363,12 +363,12 @@
                           Memory
                         </div>
                         <span
-                          aria-label="Sort by Memory descending"
+                          aria-label="Sort by Memory ascending"
                           class="MuiBadge-root css-1c32n2y-MuiBadge-root"
                           data-mui-internal-clone-element="true"
                         >
                           <span
-                            aria-label="Sort by Memory descending"
+                            aria-label="Sort by Memory ascending"
                             class="MuiButtonBase-root MuiTableSortLabel-root Mui-active css-542clt-MuiButtonBase-root-MuiTableSortLabel-root"
                             role="button"
                             tabindex="0"
@@ -729,61 +729,6 @@
                     </div>
                   </th>
                   <th
-                    aria-sort="ascending"
-                    class="MuiTableCell-root MuiTableCell-head MuiTableCell-alignLeft MuiTableCell-sizeMedium css-7mz8xn-MuiTableCell-root"
-                    colspan="1"
-                    data-can-sort="true"
-                    data-index="-1"
-                    data-sort="asc"
-                    scope="col"
-                  >
-                    <div
-                      class="Mui-TableHeadCell-Content MuiBox-root css-1w86f15"
-                    >
-                      <div
-                        class="Mui-TableHeadCell-Content-Labels MuiBox-root css-68rqdf"
-                      >
-                        <div
-                          class="Mui-TableHeadCell-Content-Wrapper MuiBox-root css-chb057"
-                        >
-                          Age
-                        </div>
-                        <span
-                          aria-label="Sorted by Age ascending"
-                          class="MuiBadge-root css-1c32n2y-MuiBadge-root"
-                          data-mui-internal-clone-element="true"
-                        >
-                          <span
-                            aria-label="Sorted by Age ascending"
-                            class="MuiButtonBase-root MuiTableSortLabel-root Mui-active css-kfi25q-MuiButtonBase-root-MuiTableSortLabel-root"
-                            role="button"
-                            tabindex="0"
-                          >
-                            <svg
-                              aria-hidden="true"
-                              class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium MuiTableSortLabel-icon MuiTableSortLabel-iconDirectionAsc css-1vweko9-MuiSvgIcon-root-MuiTableSortLabel-icon"
-                              data-testid="ArrowDownwardIcon"
-                              focusable="false"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                d="m20 12-1.41-1.41L13 16.17V4h-2v12.17l-5.58-5.59L4 12l8 8z"
-                              />
-                            </svg>
-                          </span>
-                          <span
-                            class="MuiBadge-badge MuiBadge-standard MuiBadge-invisible MuiBadge-anchorOriginTopRight MuiBadge-anchorOriginTopRightCircular MuiBadge-overlapCircular css-dniquu-MuiBadge-badge"
-                          >
-                            0
-                          </span>
-                        </span>
-                      </div>
-                      <div
-                        class="Mui-TableHeadCell-Content-Actions MuiBox-root css-epvm6"
-                      />
-                    </div>
-                  </th>
-                  <th
                     aria-sort="none"
                     class="MuiTableCell-root MuiTableCell-head MuiTableCell-alignLeft MuiTableCell-sizeMedium css-nv4ey6-MuiTableCell-root"
                     colspan="1"
@@ -849,28 +794,50 @@
                   <td
                     class="MuiTableCell-root MuiTableCell-alignLeft MuiTableCell-sizeMedium css-1adoll5-MuiTableCell-root"
                   >
-                    <a
-                      class="MuiTypography-root MuiTypography-inherit MuiLink-root MuiLink-underlineHover css-2ugbm1-MuiTypography-root-MuiLink-root"
-                      href="/"
+                    <div
+                      class="MuiBox-root css-tc4muw"
                     >
-                      node
-                    </a>
+                      <a
+                        class="MuiTypography-root MuiTypography-inherit MuiLink-root MuiLink-underlineHover css-2ugbm1-MuiTypography-root-MuiLink-root"
+                        href="/"
+                      >
+                        node
+                      </a>
+                    </div>
                   </td>
                   <td
                     class="MuiTableCell-root MuiTableCell-alignLeft MuiTableCell-sizeMedium css-lm23yi-MuiTableCell-root"
                   >
                     <div
-                      class="recharts-responsive-container css-a9n7s9"
-                      style="width: 95%; height: 20px; min-width: 0;"
-                    />
+                      class="MuiBox-root css-23j7gw"
+                    >
+                      <span
+                        class="MuiTypography-root MuiTypography-caption css-1yjsbnr-MuiTypography-root"
+                      >
+                        —
+                      </span>
+                      <div
+                        class="recharts-responsive-container css-a9n7s9"
+                        style="width: 95%; height: 20px; min-width: 0;"
+                      />
+                    </div>
                   </td>
                   <td
                     class="MuiTableCell-root MuiTableCell-alignLeft MuiTableCell-sizeMedium css-1hrdy1q-MuiTableCell-root"
                   >
                     <div
-                      class="recharts-responsive-container css-a9n7s9"
-                      style="width: 95%; height: 20px; min-width: 0;"
-                    />
+                      class="MuiBox-root css-23j7gw"
+                    >
+                      <span
+                        class="MuiTypography-root MuiTypography-caption css-1yjsbnr-MuiTypography-root"
+                      >
+                        —
+                      </span>
+                      <div
+                        class="recharts-responsive-container css-a9n7s9"
+                        style="width: 95%; height: 20px; min-width: 0;"
+                      />
+                    </div>
                   </td>
                   <td
                     class="MuiTableCell-root MuiTableCell-alignLeft MuiTableCell-sizeMedium css-x4ro7m-MuiTableCell-root"
@@ -906,17 +873,6 @@
                   <td
                     class="MuiTableCell-root MuiTableCell-alignLeft MuiTableCell-sizeMedium css-1qb9npk-MuiTableCell-root"
                   />
-                  <td
-                    class="MuiTableCell-root MuiTableCell-alignRight MuiTableCell-sizeMedium css-14i1ub9-MuiTableCell-root"
-                  >
-                    <p
-                      aria-label="2022-01-01T00:00:00.000Z"
-                      class="MuiTypography-root MuiTypography-body1 css-1d0cpfm-MuiTypography-root"
-                      data-mui-internal-clone-element="true"
-                    >
-                      90d
-                    </p>
-                  </td>
                   <td
                     class="MuiTableCell-root MuiTableCell-alignLeft MuiTableCell-sizeMedium css-hq12h3-MuiTableCell-root"
                   >
@@ -970,28 +926,50 @@
                   <td
                     class="MuiTableCell-root MuiTableCell-alignLeft MuiTableCell-sizeMedium css-1adoll5-MuiTableCell-root"
                   >
-                    <a
-                      class="MuiTypography-root MuiTypography-inherit MuiLink-root MuiLink-underlineHover css-2ugbm1-MuiTypography-root-MuiLink-root"
-                      href="/"
+                    <div
+                      class="MuiBox-root css-tc4muw"
                     >
-                      node-2
-                    </a>
+                      <a
+                        class="MuiTypography-root MuiTypography-inherit MuiLink-root MuiLink-underlineHover css-2ugbm1-MuiTypography-root-MuiLink-root"
+                        href="/"
+                      >
+                        node-2
+                      </a>
+                    </div>
                   </td>
                   <td
                     class="MuiTableCell-root MuiTableCell-alignLeft MuiTableCell-sizeMedium css-lm23yi-MuiTableCell-root"
                   >
                     <div
-                      class="recharts-responsive-container css-a9n7s9"
-                      style="width: 95%; height: 20px; min-width: 0;"
-                    />
+                      class="MuiBox-root css-23j7gw"
+                    >
+                      <span
+                        class="MuiTypography-root MuiTypography-caption css-1yjsbnr-MuiTypography-root"
+                      >
+                        —
+                      </span>
+                      <div
+                        class="recharts-responsive-container css-a9n7s9"
+                        style="width: 95%; height: 20px; min-width: 0;"
+                      />
+                    </div>
                   </td>
                   <td
                     class="MuiTableCell-root MuiTableCell-alignLeft MuiTableCell-sizeMedium css-1hrdy1q-MuiTableCell-root"
                   >
                     <div
-                      class="recharts-responsive-container css-a9n7s9"
-                      style="width: 95%; height: 20px; min-width: 0;"
-                    />
+                      class="MuiBox-root css-23j7gw"
+                    >
+                      <span
+                        class="MuiTypography-root MuiTypography-caption css-1yjsbnr-MuiTypography-root"
+                      >
+                        —
+                      </span>
+                      <div
+                        class="recharts-responsive-container css-a9n7s9"
+                        style="width: 95%; height: 20px; min-width: 0;"
+                      />
+                    </div>
                   </td>
                   <td
                     class="MuiTableCell-root MuiTableCell-alignLeft MuiTableCell-sizeMedium css-x4ro7m-MuiTableCell-root"
@@ -1027,17 +1005,6 @@
                   <td
                     class="MuiTableCell-root MuiTableCell-alignLeft MuiTableCell-sizeMedium css-1qb9npk-MuiTableCell-root"
                   />
-                  <td
-                    class="MuiTableCell-root MuiTableCell-alignRight MuiTableCell-sizeMedium css-14i1ub9-MuiTableCell-root"
-                  >
-                    <p
-                      aria-label="2022-01-01T00:00:00.000Z"
-                      class="MuiTypography-root MuiTypography-body1 css-1d0cpfm-MuiTypography-root"
-                      data-mui-internal-clone-element="true"
-                    >
-                      90d
-                    </p>
-                  </td>
                   <td
                     class="MuiTableCell-root MuiTableCell-alignLeft MuiTableCell-sizeMedium css-hq12h3-MuiTableCell-root"
                   >
