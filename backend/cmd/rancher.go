@@ -12,6 +12,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"slices"
 	"strings"
 	"sync"
 	"time"
@@ -228,14 +229,17 @@ func (c *HeadlampConfig) rancherClusters(r *http.Request) []Cluster {
 		}}
 	}
 
+	defaultClusters := []string{"prd", "iluvartar", "teaching"}
 	clusters := make([]Cluster, 0, len(identity.Clusters))
+
 	for _, cluster := range identity.Clusters {
+		showByDefault := cluster.ID != "local" && slices.Contains(defaultClusters, strings.ToLower(cluster.Name))
 		clusters = append(clusters, Cluster{
 			Name: rancherClusterName(cluster), Server: c.rancher.client.ClusterServer(cluster.ID), AuthType: "oidc",
 			Metadata: map[string]interface{}{
 				"source": "incluster", "rancherClusterID": cluster.ID, "rancherSSO": true,
 				"rancherDisplayName": cluster.Name,
-				"hideByDefault":      cluster.ID == "local" || strings.EqualFold(cluster.Name, "harbor"),
+				"hideByDefault":      !showByDefault,
 			},
 		})
 	}
