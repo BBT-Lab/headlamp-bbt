@@ -14,6 +14,12 @@
  * limitations under the License.
  */
 
+// 文件描述：显示集群概览和本地化事件列表。
+// 项目名称：Headlamp BBT
+// 文件名称：Overview.tsx
+// 作者：Codex
+// 日期：2026-11-23
+
 import FormControlLabel from '@mui/material/FormControlLabel';
 import Grid from '@mui/material/Grid';
 import { Theme } from '@mui/material/styles';
@@ -22,6 +28,7 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLocation } from 'react-router';
 import Event from '../../lib/k8s/event';
+import { eventReasonLabel } from '../../lib/k8s/eventReason';
 import Node from '../../lib/k8s/node';
 import Pod from '../../lib/k8s/pod';
 import { useFilterFunc } from '../../lib/util';
@@ -123,7 +130,9 @@ export default function Overview() {
 function EventsSection() {
   const EVENT_WARNING_SWITCH_FILTER_STORAGE_KEY = 'EVENT_WARNING_SWITCH_FILTER_STORAGE_KEY';
   const EVENT_WARNING_SWITCH_DEFAULT = true;
-  const { t } = useTranslation(['translation', 'glossary']);
+  const { t, i18n } = useTranslation(['translation', 'glossary']);
+  const reasonLabel = (reason: string) =>
+    eventReasonLabel(reason, i18n.resolvedLanguage || i18n.language || 'en');
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
   const eventsFilter = queryParams.get('eventsFilter');
@@ -175,7 +184,7 @@ function EventsSection() {
           },
         })}
       >
-        {event.reason}
+        {reasonLabel(event.reason)}
       </StatusLabel>
     );
   }
@@ -240,9 +249,9 @@ function EventsSection() {
           label: t('Reason'),
           gridTemplate: 'min-content',
           filterVariant: 'multi-select',
-          getValue: event => event.reason,
+          getValue: event => reasonLabel(event.reason),
           render: event => (
-            <LightTooltip title={event.reason} interactive>
+            <LightTooltip title={reasonLabel(event.reason)} interactive>
               {makeStatusLabel(event)}
             </LightTooltip>
           ),

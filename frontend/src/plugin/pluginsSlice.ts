@@ -44,6 +44,8 @@ export type PluginSettingsComponentType =
 
 /** Headlamp-specific fields stored in a plugin package.json. */
 export interface PluginPackageHeadlampConfig {
+  /** 发布包在加载时生成当前语言的静态文案。 */
+  bbtFixedLocale?: boolean;
   /** Whether a shipped plugin is enabled when first discovered. */
   enabledByDefault?: boolean;
   /** Array of supported locales for i18n. */

@@ -1,0 +1,9 @@
+[
+  { "find": "function j(s)", "replacement": "const __headlampArgoStatus=new Map([[\"Synced\",\"已同步\"],[\"OutOfSync\",\"未同步\"],[\"Healthy\",\"健康\"],[\"Suspended\",\"已暂停\"],[\"Progressing\",\"进行中\"],[\"Degraded\",\"异常\"],[\"Missing\",\"缺失\"],[\"Unknown\",\"未知\"],[\"SyncedFailed\",\"同步失败\"],[\"Running\",\"运行中\"],[\"Succeeded\",\"成功\"],[\"Failed\",\"失败\"]]);function __headlampArgoStatusText(value){return __HEADLAMP_ZH__?(__headlampArgoStatus.get(value)??value):value}function j(s)" },
+  { "find": "status:N(r.syncStatus),children:r.syncStatus", "replacement": "status:N(r.syncStatus),children:__headlampArgoStatusText(r.syncStatus)" },
+  { "find": "status:j(r.healthStatus),children:r.healthStatus", "replacement": "status:j(r.healthStatus),children:__headlampArgoStatusText(r.healthStatus)" },
+  { "find": "status:N(e.syncStatus),children:e.syncStatus", "replacement": "status:N(e.syncStatus),children:__headlampArgoStatusText(e.syncStatus)" },
+  { "find": "status:j(e.healthStatus),children:e.healthStatus", "replacement": "status:j(e.healthStatus),children:__headlampArgoStatusText(e.healthStatus)" },
+  { "find": "status:j(e.health.status),children:e.health.status", "replacement": "status:j(e.health.status),children:__headlampArgoStatusText(e.health.status)" },
+  { "find": "getter:e=>e.status??\"-\"", "replacement": "getter:e=>__headlampArgoStatusText(e.status??\"-\")" }
+]

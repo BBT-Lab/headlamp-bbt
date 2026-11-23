@@ -2,7 +2,34 @@
   "plugins": [
     {
       "name": "prometheus",
-      "archive": "https://github.com/headlamp-k8s/plugins/releases/download/prometheus-0.9.1/prometheus-0.9.1.tar.gz"
+      "archive": "https://github.com/headlamp-k8s/plugins/releases/download/prometheus-0.9.1/prometheus-0.9.1.tar.gz",
+      "sha256": "06afabe42da69e8e0c5c2632acc3fee020566825d2ae71ff8e4f3dd7f78fc4ae"
+    },
+    {
+      "name": "headlamp_volcano",
+      "archive": "https://github.com/headlamp-k8s/plugins/releases/download/volcano-0.2.0-beta/headlamp-k8s-volcano-0.2.0-beta.tar.gz",
+      "sha256": "a614c66d57d2df0b23d35890a9d49afb5bf20c0a8c2d28c58feabe7c1fa86325"
+    },
+    {
+      "name": "headlamp_kyverno",
+      "archive": "https://github.com/headlamp-k8s/plugins/releases/download/kyverno-0.1.0/headlamp-k8s-kyverno-0.1.0.tar.gz",
+      "sha256": "eb6d99eed8e2e4187e5d5e007c116b9e10224cd403d83f8aa87780fafcf6e059"
+    },
+    {
+      "name": "headlamp_cert-manager",
+      "archive": "https://github.com/headlamp-k8s/plugins/releases/download/cert-manager-0.1.1/headlamp-k8s-cert-manager-0.1.1.tar.gz",
+      "sha256": "2b06caae0a207e2c30ce0d21bc4d672ae0a71a2cffc23a4585199110533032ab"
+    },
+    {
+      "name": "headlamp_argocd",
+      "archive": "https://github.com/headlamp-k8s/plugins/releases/download/argocd-0.1.0-alpha/headlamp-k8s-argocd-0.1.0-alpha.tar.gz",
+      "sha256": "52eec016c40e1abe2c9a797391de0119c94f10c22005f9638389027604e8c39b"
+    },
+    {
+      "name": "headlamp_kubevirt",
+      "archive": "https://codeload.github.com/naval-group/headlamp-kubevirt/tar.gz/ce30632660057cd909f44958f3b4fbaae8bfb7d0",
+      "sha256": "f4ce1a18fdedb3e6aac99a532371ebc2a62dbc21a634ad739e40885b54c344cc",
+      "patch": "kubevirt-0.3.1.zh.patch"
     }
   ]
 }

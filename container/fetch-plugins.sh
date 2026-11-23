@@ -1,4 +1,9 @@
 #!/bin/sh -e
+# 文件描述：为给定目录生成Headlamp BBT随附插件。
+# 项目名称：Headlamp BBT
+# 文件名称：fetch-plugins.sh
+# 作者：Codex
+# 日期：2026-11-23
 
 DESTDIR=$1
 
@@ -7,36 +12,5 @@ if [ -z "$DESTDIR" ]; then
   exit 1
 fi
 
-TMPDIR=$(mktemp -d)
-
-# Fetch plugins
-echo "Fetching plugins (wdir: $TMPDIR)..."
-
-manifest=$(cat ./build-manifest.json)
-
-plugins=$(echo $manifest | jq -r '.plugins[] | .name')
-for plugin in $plugins; do
-  echo "Fetching $plugin..."
-
-  url=$(echo $manifest | jq -r ".plugins[] | select(.name == \"$plugin\") | .archive")
-  curl -sL $url --output-dir $TMPDIR --output $plugin.tgz
-
-  archivedir=$TMPDIR/$plugin
-  mkdir -p $archivedir
-  tar -xzf $TMPDIR/$plugin.tgz -C $archivedir --wildcards '*/main.js' '*/package.json' '*/locales/*/translation.json'
-
-  ls -lr $archivedir
-
-  extracted_dir=$(find $archivedir -mindepth 1 -maxdepth 1 -type d)
-
-  dir=$DESTDIR/$plugin
-  mkdir -p $dir
-  cp $extracted_dir/main.js $extracted_dir/package.json $dir
-  if [ -d "$extracted_dir/locales" ]; then
-    cp -r $extracted_dir/locales $dir
-  fi
-
-  echo " done"
-done
-
-rm -rf $TMPDIR
+SCRIPT_DIR=$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd)
+exec node "$SCRIPT_DIR/../plugins/bbt/bundled/prepare.mjs" "$DESTDIR"

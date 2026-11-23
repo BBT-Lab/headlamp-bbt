@@ -22,11 +22,13 @@ import { useTranslation } from 'react-i18next';
 import { getClusterAppearanceFromMeta } from '../../helpers/clusterAppearance';
 import { isElectron } from '../../helpers/isElectron';
 import { useClustersConf, useSelectedClusters } from '../../lib/k8s';
+import { request } from '../../lib/k8s/api/v1/clusterRequests';
 import { clusterDisplayName } from '../../lib/k8s/clusterPresentation';
 import CompositePodGroup from '../../lib/k8s/compositePodGroup';
 import CRD from '../../lib/k8s/crd';
 import DeviceClass from '../../lib/k8s/deviceClass';
 import { useGatewayL4RouteAvailability } from '../../lib/k8s/gatewayL4RouteAvailability';
+import { useGpuTelemetry } from '../../lib/k8s/gpu/hooks';
 import PodGroup from '../../lib/k8s/podGroup';
 import { useIsResourceServed } from '../../lib/k8s/resourceAvailability';
 import { createRouteURL } from '../../lib/router/createRouteURL';
@@ -34,6 +36,7 @@ import { useTypedSelector } from '../../redux/hooks';
 import { selectEffectiveSettings } from '../../settings/useAdminSettings';
 import { DefaultSidebars, SidebarEntryProps, SidebarItemProps } from '.';
 import ClusterBadge from './ClusterBadge';
+import { bundledPluginResource, useBundledPluginResources } from './useBundledPluginResources';
 
 /** Iterates over every entry in the list, including children */
 const forEachEntry = (items: SidebarItemProps[], cb: (item: SidebarItemProps) => void) => {
@@ -71,6 +74,12 @@ export const useSidebarItems = (sidebarName: string = DefaultSidebars.IN_CLUSTER
     Object.keys(clusters).length !== 1 ||
     Object.values(clusters).some(cluster => cluster.meta_data?.hideByDefault === true);
   const selectedClusters = useSelectedClusters();
+  const hasGpuMonitor = Object.values(customSidebarEntries).some(
+    entry => entry.name === 'gpu-monitor'
+  );
+  const { clusters: gpuClusters } = useGpuTelemetry(request, hasGpuMonitor ? selectedClusters : []);
+  const canShowGpuMonitor = Object.keys(gpuClusters).length > 0;
+  const bundledPluginResources = useBundledPluginResources(selectedClusters, customSidebarEntries);
   const allClustersConf = useClustersConf();
   const { t } = useTranslation();
   const theme = useTheme();
@@ -588,7 +597,17 @@ export const useSidebarItems = (sidebarName: string = DefaultSidebars.IN_CLUSTER
     ];
 
     // Create a copy of all the custom entries so we don't accidentaly mutate them
-    const customEntries = _.cloneDeep(Object.values(customSidebarEntries));
+    const customEntries = _.cloneDeep(
+      Object.values(customSidebarEntries)
+        .filter(entry => {
+          if (entry.name === 'gpu-monitor') return canShowGpuMonitor;
+          const api = bundledPluginResource(entry.url);
+          return !api || bundledPluginResources?.has(api);
+        })
+        .map(entry =>
+          entry.name === 'gpu-monitor' ? { ...entry, label: t('GPU Monitor') } : entry
+        )
+    );
 
     // Lookup map of every sidebar entry
     const entryLookup = new Map<string, SidebarItemProps>();
@@ -665,6 +684,8 @@ export const useSidebarItems = (sidebarName: string = DefaultSidebars.IN_CLUSTER
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     customSidebarEntries,
+    bundledPluginResources,
+    canShowGpuMonitor,
     shouldShowHomeItem,
     customSidebarFilters,
     customHomeSidebarFilters,

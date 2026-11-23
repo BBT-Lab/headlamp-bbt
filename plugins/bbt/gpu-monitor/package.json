@@ -1,0 +1,21 @@
+{
+  "name": "headlamp-gpu-monitor",
+  "version": "0.1.0",
+  "description": "GPU Monitor adapted for Headlamp BBT",
+  "license": "Apache-2.0",
+  "private": true,
+  "homepage": "https://github.com/gen3111620/headlamp-gpu-monitor",
+  "headlamp": {
+    "minVersion": "0.46.0",
+    "i18n": ["zh", "zh-x-bbt"]
+  },
+  "scripts": {
+    "build": "headlamp-plugin build && node stage.mjs",
+    "tsc": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@kinvolk/headlamp-plugin": "0.14.0",
+    "@playwright/test": "^1.56.0",
+    "js-yaml": "4.3.2"
+  }
+}

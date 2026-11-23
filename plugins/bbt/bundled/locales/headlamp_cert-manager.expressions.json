@@ -1,0 +1,15 @@
+[
+  { "find": "function k({items:t,emptyText:r=", "replacement": "const __headlampCertStates=new Map([[\"pending\",\"等待中\"],[\"processing\",\"处理中\"],[\"ready\",\"就绪\"],[\"valid\",\"有效\"],[\"invalid\",\"无效\"],[\"errored\",\"错误\"],[\"expired\",\"已过期\"],[\"revoked\",\"已吊销\"],[\"deactivated\",\"已停用\"],[\"Ready\",\"就绪\"],[\"Approved\",\"已批准\"],[\"Denied\",\"已拒绝\"],[\"InvalidRequest\",\"无效请求\"],[\"True\",\"是\"],[\"False\",\"否\"],[\"Unknown\",\"未知\"],[\"true\",\"是\"],[\"false\",\"否\"]]);function __headlampCertStateText(value){return __HEADLAMP_ZH__?(__headlampCertStates.get(value)??value):value}function k({items:t,emptyText:r=" },
+  { "find": "value:(u=a.status)==null?void 0:u.state}", "replacement": "value:__headlampCertStateText(a.status?.state)}" },
+  { "find": "value:(p=a.status)==null?void 0:p.state}", "replacement": "value:__headlampCertStateText(a.status?.state)}" },
+  { "find": "getValue:o=>{var i;return(i=o.status)==null?void 0:i.state}},{id:\"domain\"", "replacement": "getValue:o=>__headlampCertStateText(o.status?.state)},{id:\"domain\"" },
+  { "find": "getValue:o=>{var i;return(i=o.status)==null?void 0:i.state}},\"age\"]", "replacement": "getValue:o=>__headlampCertStateText(o.status?.state)},\"age\"]" },
+  { "find": "getter:r=>r.type", "replacement": "getter:r=>__headlampCertStateText(r.type)" },
+  { "find": "getter:r=>r.status", "replacement": "getter:r=>__headlampCertStateText(r.status)" },
+  { "find": "datum:\"approved\"", "replacement": "getValue:o=>__headlampCertStateText(o.approved)" },
+  { "find": "datum:\"denied\"", "replacement": "getValue:o=>__headlampCertStateText(o.denied)" },
+  { "find": "datum:\"ready\"", "replacement": "getValue:o=>__headlampCertStateText(o.ready)" },
+  { "find": "value:a.status.presented.toString()", "replacement": "value:__headlampCertStateText(a.status.presented.toString())" },
+  { "find": "value:a.status.processing.toString()", "replacement": "value:__headlampCertStateText(a.status.processing.toString())" },
+  { "find": "label:\"cert-manager\"", "replacement": "label:(__BBT_DUAL__?\"证书管理 (cert-manager)\":__HEADLAMP_ZH__?\"证书管理\":\"cert-manager\")" }
+]

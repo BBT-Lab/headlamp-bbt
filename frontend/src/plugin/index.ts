@@ -639,6 +639,8 @@ export async function fetchAndExecutePlugins(
   const sourcesToExecute = indicesToExecute.map(index => sources[index]);
   const pluginPathsToExecute = indicesToExecute.map(index => pluginPaths[index]);
   const packageInfosToExecute = indicesToExecute.map(index => packageInfos[index]);
+  const bundledLocale = getBundledPluginLocale(i18next.resolvedLanguage ?? i18next.language);
+  Object.assign(window, { headlampBbtPluginLocale: bundledLocale });
   const secureStorageBridge = window?.desktopApi?.secureStorage;
   const secureStorageNamespaces = packageInfosToExecute.map(getPluginSecureStorageNamespace);
   const secureStorageCapabilities: Record<string, string> = secureStorageBridge
@@ -778,7 +780,32 @@ export async function fetchAndExecutePlugins(
   // Initialize plugin i18n after plugins are loaded
   await initializePluginsI18n(packageInfos, pluginPaths, deadline);
 
+  if (packageInfosToExecute.some(info => info.headlamp?.bbtFixedLocale)) {
+    i18next.on('languageChanged', language => {
+      if (getBundledPluginLocale(language) !== bundledLocale) {
+        const url = new URL(window.location.href);
+        if (url.searchParams.has('lng')) {
+          url.searchParams.set('lng', language);
+          window.location.replace(url);
+        } else {
+          window.location.reload();
+        }
+      }
+    });
+  }
+
   await beforePluginStartupDeadline(afterPluginsRun(pluginsLoaded), deadline);
+}
+
+/**
+ * 将界面语言映射到随附插件的静态文案模式。
+ *
+ * :param language: Headlamp当前语言。
+ * :returns: 随附插件使用的文案模式。
+ */
+function getBundledPluginLocale(language: string) {
+  if (language === 'zh-x-bbt') return language;
+  return language === 'zh' || language === 'zh-Hans' ? 'zh' : 'en';
 }
 
 /**
