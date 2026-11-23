@@ -48,17 +48,24 @@ func TestRancherVisibleClusterMetadata(t *testing.T) {
 	r := httptest.NewRequestWithContext(t.Context(), http.MethodGet, "/config", nil)
 	identity := &rancher.Identity{Clusters: []rancher.Cluster{
 		{ID: "c-sz99k", Name: "prd"},
+		{ID: "c-w2wvl", Name: "iluvartar"},
+		{ID: "c-mdnm4", Name: "teaching"},
+		{ID: "c-kwwcj", Name: "sso"},
 		{ID: "c-vfttv", Name: "harbor"},
 		{ID: "local", Name: "local"},
 	}}
 	rows := c.rancherClusters(r.WithContext(context.WithValue(r.Context(), rancherIdentityKey{}, identity)))
-	require.Len(t, rows, 3)
+	require.Len(t, rows, 6)
 	require.Equal(t, "prd--c-sz99k", rows[0].Name)
-	require.Equal(t, "prd", rows[0].Metadata["rancherDisplayName"])
-	require.Equal(t, false, rows[0].Metadata["hideByDefault"])
-	require.Equal(t, true, rows[1].Metadata["hideByDefault"])
-	require.Equal(t, true, rows[2].Metadata["hideByDefault"])
-	require.False(t, rancherCanAccess("/clusters/teaching--c-mdnm4/version", nil, identity.Clusters))
+
+	for index, row := range rows {
+		cluster := identity.Clusters[index]
+		require.Equal(t, cluster.Name, row.Metadata["rancherDisplayName"])
+		require.Equal(t, index >= 3, row.Metadata["hideByDefault"], cluster.Name)
+		require.True(t, rancherCanAccess("/clusters/"+row.Name+"/version", nil, identity.Clusters))
+	}
+
+	require.False(t, rancherCanAccess("/clusters/sso--c-kwwcj/version", nil, identity.Clusters[:3]))
 }
 
 // TestRancherRequestContextKey验证客户端标识不能改变服务端选择的会话。

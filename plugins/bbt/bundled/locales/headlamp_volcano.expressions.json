@@ -1,0 +1,17 @@
+[
+  { "find": "function de(e)", "replacement": "const __headlampVolcanoStatus=new Map([[\"Pending\",\"等待中\"],[\"Running\",\"运行中\"],[\"Restarting\",\"重启中\"],[\"Completing\",\"完成中\"],[\"Completed\",\"已完成\"],[\"Failed\",\"失败\"],[\"Succeeded\",\"成功\"],[\"Terminating\",\"终止中\"],[\"Terminated\",\"已终止\"],[\"Aborting\",\"中止中\"],[\"Aborted\",\"已中止\"],[\"Inqueue\",\"排队中\"],[\"Unknown\",\"未知\"],[\"Open\",\"已打开\"],[\"Closing\",\"关闭中\"],[\"Closed\",\"已关闭\"],[\"True\",\"是\"],[\"False\",\"否\"],[\"Unschedulable\",\"无法调度\"],[\"Scheduled\",\"已调度\"],[\"CrashLoopBackOff\",\"崩溃后反复重启\"],[\"ImagePullBackOff\",\"镜像拉取失败，等待重试\"],[\"ErrImagePull\",\"镜像拉取失败\"],[\"InvalidImageName\",\"镜像名称无效\"],[\"CreateContainerConfigError\",\"容器配置错误\"],[\"CreateContainerError\",\"创建容器失败\"],[\"ContainerCannotRun\",\"容器无法运行\"],[\"OOMKilled\",\"因内存不足被终止\"],[\"Evicted\",\"已驱逐\"],[\"Error\",\"错误\"],[\"Init:CrashLoopBackOff\",\"初始化容器崩溃后反复重启\"],[\"Init:ImagePullBackOff\",\"初始化镜像拉取失败，等待重试\"],[\"Init:ErrImagePull\",\"初始化镜像拉取失败\"],[\"traverse\",\"遍历\"],[\"fifo\",\"先进先出\"]]);function __headlampVolcanoStatusText(value){return __HEADLAMP_ZH__?(__headlampVolcanoStatus.get(value)??value):value}function de(e)" },
+  { "find": "status:de(i.phase),children:i.phase", "replacement": "status:de(i.phase),children:__headlampVolcanoStatusText(i.phase)" },
+  { "find": "status:de(e.phase),children:e.phase", "replacement": "status:de(e.phase),children:__headlampVolcanoStatusText(e.phase)" },
+  { "find": "status:ge(a.phase),children:a.phase", "replacement": "status:ge(a.phase),children:__headlampVolcanoStatusText(a.phase)" },
+  { "find": "status:ge(e.phase),children:e.phase", "replacement": "status:ge(e.phase),children:__headlampVolcanoStatusText(e.phase)" },
+  { "find": "status:ie(s.state),children:s.state", "replacement": "status:ie(s.state),children:__headlampVolcanoStatusText(s.state)" },
+  { "find": "status:ie(i.state),children:i.state", "replacement": "status:ie(i.state),children:__headlampVolcanoStatusText(i.state)" },
+  { "find": "status:ie(a.state),children:a.state", "replacement": "status:ie(a.state),children:__headlampVolcanoStatusText(a.state)" },
+  { "find": "value:e.phase}", "replacement": "value:__headlampVolcanoStatusText(e.phase)}" },
+  { "find": "value:i.dequeueStrategy", "replacement": "value:__headlampVolcanoStatusText(i.dequeueStrategy)" },
+  { "find": "`${i.reason} (For more details, click the Pod link above)`", "replacement": "(__HEADLAMP_ZH__?`${__headlampVolcanoStatusText(i.reason)}（点击上方 Pod 链接查看详情）`:`${i.reason} (For more details, click the Pod link above)` )" },
+  { "find": "getter:s=>s.status||\"-\"", "replacement": "getter:s=>__headlampVolcanoStatusText(s.status)||\"-\"" },
+  { "find": "value:s.status||\"-\"", "replacement": "value:__headlampVolcanoStatusText(s.status)||\"-\"" },
+  { "find": "value:s.type||\"-\"", "replacement": "value:__headlampVolcanoStatusText(s.type)||\"-\"" },
+  { "find": "name:i.pods.length===1?\"Pod\":\"Pods\"", "replacement": "name:__HEADLAMP_ZH__?\"Pod\":i.pods.length===1?\"Pod\":\"Pods\"" }
+]

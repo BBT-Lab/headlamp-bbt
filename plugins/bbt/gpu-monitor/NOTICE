@@ -1,0 +1,8 @@
+GPU Monitor for Headlamp
+
+Original project maintained by gen3111620.
+Source: https://github.com/gen3111620/headlamp-gpu-monitor
+Upstream v0.1.0 commit: 73a3dd7fbd33885cf9c14603e524fb9421373082
+
+Distributed under the Apache License, Version 2.0.
+Headlamp BBT adapts the dashboard, telemetry, and localization.

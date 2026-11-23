@@ -209,10 +209,10 @@ export interface PodPhases {
   unknown: number;
 }
 
-export function podPhases(pods: PodJson[]): PodPhases {
+export function podPhases(pods: PodJson[], phaseForPod = podDisplayPhase): PodPhases {
   const phases: PodPhases = { running: 0, pending: 0, succeeded: 0, failed: 0, unknown: 0 };
   for (const pod of pods) {
-    const phase = (podDisplayPhase(pod) ?? 'Unknown').toLowerCase();
+    const phase = (phaseForPod(pod) ?? 'Unknown').toLowerCase();
     if (phase in phases) phases[phase as keyof PodPhases] += 1;
     else phases.unknown += 1;
   }

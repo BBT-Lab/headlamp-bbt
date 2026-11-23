@@ -1,0 +1,16 @@
+[
+  { "find": "children:e(\"Kinds:\")", "replacement": "children:e(\"Kinds:\",{nsSeparator:false})" },
+  { "find": "children:e(\"Names:\")", "replacement": "children:e(\"Names:\",{nsSeparator:false})" },
+  { "find": "children:e(\"Namespaces:\")", "replacement": "children:e(\"Namespaces:\",{nsSeparator:false})" },
+  { "find": "children:e(\"Subjects:\")", "replacement": "children:e(\"Subjects:\",{nsSeparator:false})" },
+  { "find": "function Oe({status:t})", "replacement": "const __headlampKyvernoResults=new Map([[\"pass\",\"通过\"],[\"fail\",\"失败\"],[\"warn\",\"警告\"],[\"error\",\"错误\"],[\"skip\",\"跳过\"]]),__headlampKyvernoSeverities=new Map([[\"critical\",\"严重\"],[\"high\",\"高\"],[\"medium\",\"中\"],[\"low\",\"低\"],[\"info\",\"信息\"]]),__headlampKyvernoPolicyValues=new Map([[\"Audit\",\"审计\"],[\"Enforce\",\"强制执行\"],[\"Deny\",\"拒绝\"],[\"Warn\",\"警告\"],[\"Validate\",\"验证\"],[\"Mutate\",\"变更\"],[\"Generate\",\"生成\"],[\"VerifyImages\",\"验证镜像\"],[\"True\",\"是\"],[\"False\",\"否\"],[\"Unknown\",\"未知\"]]);function __headlampKyvernoPolicyText(value){return __HEADLAMP_ZH__?(__headlampKyvernoPolicyValues.get(value)??value):value}function Oe({status:t})" },
+  { "find": "label:t,color:dt[t]", "replacement": "label:__HEADLAMP_ZH__?(__headlampKyvernoResults.get(t)??t):t,color:dt[t]" },
+  { "find": "label:t,color:ts[t]", "replacement": "label:__HEADLAMP_ZH__?(__headlampKyvernoSeverities.get(t)??t):t,color:ts[t]" },
+  { "find": "label:`${l} (${a[l]||0})`", "replacement": "label:__HEADLAMP_ZH__?`${__headlampKyvernoResults.get(l)??l}（${a[l]||0}）`:`${l} (${a[l]||0})`" },
+  { "find": "value:t.validationActions.join(\", \")", "replacement": "value:t.validationActions.map(__headlampKyvernoPolicyText).join(\", \")" },
+  { "find": "value:t.validationFailureAction", "replacement": "value:__headlampKyvernoPolicyText(t.validationFailureAction)" },
+  { "find": "value:t.ruleTypes.join(\", \")", "replacement": "value:t.ruleTypes.map(__headlampKyvernoPolicyText).join(\", \")" },
+  { "find": "label:a.original.status", "replacement": "label:__headlampKyvernoPolicyText(a.original.status)" },
+  { "find": "v.map(d=>s.jsx(n.MenuItem,{value:d,children:d},d))", "replacement": "v.map(d=>s.jsx(n.MenuItem,{value:d,children:__HEADLAMP_ZH__?(__headlampKyvernoSeverities.get(d)??d):d},d))" },
+  { "find": "children:[d,\" (\",p.length,\")\"]", "replacement": "children:__HEADLAMP_ZH__?[d===\"cluster-scoped\"&&r===\"namespace\"?\"集群范围\":d,\"（\",p.length,\"）\"]:[d,\" (\",p.length,\")\"]" }
+]

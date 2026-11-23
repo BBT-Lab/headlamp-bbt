@@ -1,6 +1,13 @@
 **/node_modules
 plugins/bbt/*/dist/
 /.plugins/headlamp-plus/
+/.plugins/headlamp-gpu-monitor/
+/.plugins/headlamp_argocd/
+/.plugins/headlamp_cert-manager/
+/.plugins/headlamp_kubevirt/
+/.plugins/headlamp_kyverno/
+/.plugins/headlamp_volcano/
+/.plugins/prometheus/
 /.plugins-user/
 backend/tools/
 docs/

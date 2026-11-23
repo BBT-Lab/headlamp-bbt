@@ -14,17 +14,98 @@
  * limitations under the License.
  */
 
+// 文件描述：展示节点CPU、内存和GPU的资源用量。
+// 项目名称：Headlamp BBT
+// 文件名称：List.tsx
+// 作者：Codex
+// 日期：2026-11-23
+
 import Box from '@mui/material/Box';
-import { useMemo } from 'react';
+import LinearProgress from '@mui/material/LinearProgress';
+import Typography from '@mui/material/Typography';
+import { createContext, useContext, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useSelectedClusters } from '../../lib/k8s';
+import { request } from '../../lib/k8s/api/v1/clusterRequests';
+import type { KubeMetrics } from '../../lib/k8s/cluster';
+import { useGpuTelemetry } from '../../lib/k8s/gpu/hooks';
+import { gpuModels, gpuUsage } from '../../lib/k8s/gpu/summary';
+import { gpuOccupationKnown, type GpuTelemetry } from '../../lib/k8s/gpu/telemetry';
 import Node from '../../lib/k8s/node';
-import { getResourceMetrics } from '../../lib/util';
-import { HoverInfoLabel, StatusLabel } from '../common/Label';
+import { getPercentStr, getResourceMetrics } from '../../lib/util';
+import { DateLabel, HoverInfoLabel, StatusLabel } from '../common/Label';
+import Link from '../common/Link';
 import ResourceListView from '../common/Resource/ResourceListView';
 import { UsageBarChart } from './Charts';
 import { NodeReadyLabel } from './Details';
 import UpgradeVisualizationPanel from './UpgradeVisualizationPanel';
 import { formatTaint, isNodeCordoned, NodeTaintsLabel } from './utils';
+
+const NodeMetricsContext = createContext<{
+  gpu: Record<string, GpuTelemetry>;
+  metrics: KubeMetrics[] | null;
+  noMetrics: boolean;
+}>({ gpu: {}, metrics: null, noMetrics: false });
+
+/** 节点名、用量条和型号随实时数据更新，即使表格复用了同一行。 */
+function NodeGpuCell({ node, field }: { node: Node; field: 'name' | 'usage' | 'memory' }) {
+  const { t } = useTranslation('translation');
+  const { gpu } = useContext(NodeMetricsContext);
+  const snapshot = gpu[node.cluster];
+  const cards = snapshot?.cards.filter(card => card.node === node.getName()) ?? [];
+  if (field === 'name') {
+    const model = gpuModels(cards);
+    return (
+      <Box sx={{ display: 'grid', minWidth: 0 }}>
+        <Link kubeObject={node} />
+        {model && (
+          <Typography variant="caption" color="text.secondary" noWrap title={model}>
+            {model}
+          </Typography>
+        )}
+      </Box>
+    );
+  }
+  if (!cards.length) return '—';
+  const usage = gpuUsage(cards, gpuOccupationKnown(snapshot, node.getName()));
+  const memory = field === 'memory';
+  const percent = memory ? usage.vramPercent : usage.utilization;
+  const label = memory ? t('GPU memory utilization') : t('GPU utilization');
+  const formatted = percent === undefined ? '—' : getPercentStr(percent, 100);
+  return (
+    <Box
+      sx={{ display: 'grid', gap: 0.5, minWidth: 64 }}
+      title={!memory ? formatted ?? undefined : undefined}
+    >
+      <Typography variant="caption">
+        {memory ? formatted : `${usage.occupied ?? '—'}/${usage.total}`}
+      </Typography>
+      {percent !== undefined && (
+        <LinearProgress
+          aria-label={label}
+          variant="determinate"
+          value={percent}
+          color={memory ? 'success' : 'primary'}
+          sx={{ height: 4, borderRadius: 2 }}
+        />
+      )}
+    </Box>
+  );
+}
+
+/** 使用和节点表相同的实时资源数据绘制CPU或内存。 */
+function NodeResourceCell({ node, resource }: { node: Node; resource: 'cpu' | 'memory' }) {
+  const { metrics, noMetrics } = useContext(NodeMetricsContext);
+  return (
+    <UsageBarChart
+      node={node}
+      nodeMetrics={metrics}
+      resourceType={resource}
+      noMetrics={noMetrics}
+      showPercentage
+    />
+  );
+}
 
 export function filterNode(node: Node, search: string) {
   const lowerSearch = search.trim().toLowerCase();
@@ -51,8 +132,20 @@ export default function NodeList() {
   const [nodeMetrics, metricsError] = Node.useMetrics();
   const { items } = Node.useList();
   const { t } = useTranslation(['glossary', 'translation']);
+  const selectedClusters = useSelectedClusters();
+  const { clusters: gpuClusters } = useGpuTelemetry(request, selectedClusters);
+  const hasGpu = Object.keys(gpuClusters).length > 0;
+  const resourceFraction = (node: Node, resource: 'cpu' | 'memory') => {
+    if (!nodeMetrics?.some(item => item.metadata.name === node.getName())) return undefined;
+    const [used, capacity] = getResourceMetrics(node, nodeMetrics, resource);
+    return capacity ? used / capacity : undefined;
+  };
 
   const noMetrics = metricsError?.status === 404;
+  const context = useMemo(
+    () => ({ gpu: gpuClusters, metrics: nodeMetrics, noMetrics }),
+    [gpuClusters, nodeMetrics, noMetrics]
+  );
 
   const hasNodePools = useMemo(() => {
     if (!items || items.length === 0) return false;
@@ -60,7 +153,7 @@ export default function NodeList() {
   }, [items]);
 
   return (
-    <>
+    <NodeMetricsContext.Provider value={context}>
       <ResourceListView
         title={t('Nodes')}
         resourceClass={Node}
@@ -70,43 +163,51 @@ export default function NodeList() {
           noNamespaceFilter: true,
         }}
         columns={[
-          'name',
+          {
+            id: 'name',
+            label: t('translation|Name'),
+            gridTemplate: 'minmax(156px, 1fr)',
+            getValue: node => node.getName(),
+            render: node => <NodeGpuCell node={node} field="name" />,
+          },
           'cluster',
           {
             id: 'cpu',
             label: t('CPU'),
             gridTemplate: 'min-content',
             disableFiltering: true,
-            getValue: node => {
-              const [used] = getResourceMetrics(node, nodeMetrics || [], 'cpu');
-              return used;
-            },
-            render: node => (
-              <UsageBarChart
-                node={node}
-                nodeMetrics={nodeMetrics}
-                resourceType="cpu"
-                noMetrics={noMetrics}
-              />
-            ),
+            getValue: node => resourceFraction(node, 'cpu'),
+            render: node => <NodeResourceCell node={node} resource="cpu" />,
           },
           {
             id: 'memory',
             label: t('Memory'),
             disableFiltering: true,
-            getValue: node => {
-              const [used] = getResourceMetrics(node, nodeMetrics || [], 'memory');
-              return used;
-            },
-            render: node => (
-              <UsageBarChart
-                node={node}
-                nodeMetrics={nodeMetrics}
-                resourceType="memory"
-                noMetrics={noMetrics}
-              />
-            ),
+            getValue: node => resourceFraction(node, 'memory'),
+            render: node => <NodeResourceCell node={node} resource="memory" />,
           },
+          ...(hasGpu
+            ? [
+                {
+                  id: 'gpu',
+                  label: 'GPU',
+                  gridTemplate: '96px',
+                  disableFiltering: true,
+                  sort: false,
+                  getValue: (node: Node) => node.getName(),
+                  render: (node: Node) => <NodeGpuCell node={node} field="usage" />,
+                },
+                {
+                  id: 'gpu-memory',
+                  label: t('translation|GPU memory utilization'),
+                  gridTemplate: '106px',
+                  disableFiltering: true,
+                  sort: false,
+                  getValue: (node: Node) => node.getName(),
+                  render: (node: Node) => <NodeGpuCell node={node} field="memory" />,
+                },
+              ]
+            : []),
           {
             id: 'ready',
             label: t('translation|Ready'),
@@ -221,10 +322,18 @@ export default function NodeList() {
             show: false,
           },
           'labels',
-          'age',
+          {
+            id: 'age',
+            label: t('translation|Age'),
+            show: false,
+            gridTemplate: 'min-content',
+            getValue: node => -Date.parse(node.metadata.creationTimestamp),
+            disableFiltering: true,
+            render: node => <DateLabel date={node.metadata.creationTimestamp} format="mini" />,
+          },
         ]}
       />
       <UpgradeVisualizationPanel />
-    </>
+    </NodeMetricsContext.Provider>
   );
 }

@@ -11,6 +11,7 @@
  */
 import { Icon } from '@iconify/react';
 import { K8s } from '@kinvolk/headlamp-plugin/lib';
+import { request } from '@kinvolk/headlamp-plugin/lib/ApiProxy';
 import {
   Box,
   Button,
@@ -32,6 +33,9 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
+import type { ConnectionConfig } from '../../../../../frontend/src/lib/k8s/gpu/config';
+import { useGpuRange } from '../../../../../frontend/src/lib/k8s/gpu/hooks';
+import { gpuHistory } from '../../../../../frontend/src/lib/k8s/gpu/summary';
 import { cardGrid, Panel } from './blocks';
 import { formatCores, formatGiB } from './clusterHealth';
 import {
@@ -77,8 +81,7 @@ function usePrometheus(cluster: string): [PromState, (endpoint: PrometheusEndpoi
     setState({ status: 'loading' });
     discoverPrometheus(cluster)
       .then(endpoint => {
-        if (!cancelled)
-          setState(endpoint ? { status: 'ready', endpoint } : { status: 'missing' });
+        if (!cancelled) setState(endpoint ? { status: 'ready', endpoint } : { status: 'missing' });
       })
       .catch(() => !cancelled && setState({ status: 'missing' }));
     return () => {
@@ -142,19 +145,21 @@ function TrendChart({
   unit,
   capacity,
   capacityLabel,
+  emptyLabel,
 }: {
   title: string;
-  points: TrendPoint[];
+  points: { ts: number; value: number | null }[];
   range: TrendRange;
   format: (value: number) => string;
   unit: string;
   capacity?: number;
   capacityLabel: string;
+  emptyLabel?: string;
 }) {
   const { t, language } = usePlusText();
   const theme = useTheme();
   const color = SERIES_COLOR[theme.palette.mode === 'dark' ? 'dark' : 'light'];
-  const summary = summarize(points);
+  const summary = summarize(points.filter((point): point is TrendPoint => point.value !== null));
   const id = React.useId().replace(/:/g, '');
   const top = Math.max(summary?.max ?? 0, capacity ?? 0) * 1.05 || 1;
   return (
@@ -173,11 +178,12 @@ function TrendChart({
           </Typography>
         )}
       </Box>
-      {points.length === 0 ? (
+      {!summary ? (
         <Typography variant="body2" color="text.secondary" sx={{ py: 4 }}>
-          {t(
-            "No samples in this range. The trend needs the kubelet's cAdvisor metrics in Prometheus."
-          )}
+          {emptyLabel ??
+            t(
+              "No samples in this range. The trend needs the kubelet's cAdvisor metrics in Prometheus."
+            )}
         </Typography>
       ) : (
         <Box
@@ -294,6 +300,8 @@ export function UsageTrends({
   cpuCapacity,
   memoryCapacity,
   capacityLabel,
+  gpuConfig,
+  gpuSampledAt,
 }: {
   namespace?: string;
   /** Cores. */
@@ -302,11 +310,30 @@ export function UsageTrends({
   memoryCapacity?: number;
   /** Name of the dashed line, e.g. "allocatable" or "quota". */
   capacityLabel: string;
+  gpuConfig?: ConnectionConfig;
+  gpuSampledAt?: number;
 }) {
   const { t } = usePlusText();
   const cluster = K8s.useCluster() || '';
   const [prom, choose] = usePrometheus(cluster);
   const [range, setRange] = React.useState<TrendRange>('6h');
+  const gpuRange = useGpuRange(
+    request,
+    cluster,
+    gpuConfig,
+    range === '7d' ? 168 : Number.parseInt(range, 10),
+    Math.floor((gpuSampledAt ?? 0) / 60000)
+  );
+  const gpuPoints = React.useMemo(
+    () =>
+      gpuRange
+        ? gpuHistory(gpuRange.series, gpuRange.start, gpuRange.end, gpuRange.step).map(point => ({
+            ts: point.ts,
+            value: point.utilization,
+          }))
+        : [],
+    [gpuRange]
+  );
   const trends = useTrends(
     prom.status === 'ready' ? prom.endpoint : undefined,
     cluster,
@@ -370,6 +397,18 @@ export function UsageTrends({
               capacity={memoryCapacity}
               capacityLabel={capacityLabel}
             />
+            {gpuConfig && (
+              <TrendChart
+                title={t('GPU usage')}
+                points={gpuPoints}
+                range={range}
+                format={formatCores}
+                unit="%"
+                capacity={100}
+                capacityLabel={t('Maximum')}
+                emptyLabel={t('No GPU samples in this range.')}
+              />
+            )}
           </Box>
           <Typography variant="caption" color="text.secondary" component="div" sx={{ mt: 1 }}>
             {t('From {{source}}: container usage reported by the kubelets (cAdvisor).', {

@@ -69,12 +69,15 @@ const placeholders = text =>
 const bilingualPath = 'locales/zh-x-bbt/translation.json';
 const bilingual = JSON.parse(readFileSync(path.join(root, bilingualPath), 'utf8'));
 for (const key of keys) {
-  assert.match(locale[key] ?? '', /\p{Script=Han}/u, '简体中文文案缺失：' + key);
+  if (key === 'Pod' || key === 'Pods') {
+    assert.equal(locale[key], 'Pod', '简体中文保留Pod资源名');
+    assert.equal(bilingual[key], 'Pod', '双语保留Pod资源名');
+  } else {
+    assert.match(locale[key] ?? '', /\p{Script=Han}/u, '简体中文文案缺失：' + key);
+  }
   assert.deepEqual(placeholders(locale[key]), placeholders(key), '插值字段不匹配：' + key);
   assert.deepEqual(placeholders(bilingual[key]), placeholders(key), '双语插值字段不匹配：' + key);
 }
-assert.equal(locale.Pods, '容器组');
-assert.equal(bilingual.Pods, '容器组 (Pod)');
 assert.equal(bilingual['Try again'], locale['Try again']);
 
 const packageDirectory = process.argv[2] ? path.resolve(process.argv[2]) : root;

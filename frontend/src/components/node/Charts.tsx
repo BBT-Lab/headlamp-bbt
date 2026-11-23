@@ -14,6 +14,13 @@
  * limitations under the License.
  */
 
+// 文件描述：渲染节点CPU和内存使用量。
+// 项目名称：Headlamp BBT
+// 文件名称：Charts.tsx
+// 作者：Codex
+// 日期：2026-11-23
+
+import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
@@ -28,10 +35,17 @@ interface UsageBarChartProps {
   nodeMetrics: KubeMetrics[] | null;
   resourceType: keyof KubeMetrics['usage'];
   noMetrics?: boolean;
+  showPercentage?: boolean;
 }
 
+/**
+ * 渲染节点资源进度条及可选的占用百分比。
+ *
+ * :param props: 节点、实时指标和资源类型。
+ * :returns: 对应资源的用量图。
+ */
 export function UsageBarChart(props: UsageBarChartProps) {
-  const { node, nodeMetrics, resourceType, noMetrics = false } = props;
+  const { node, nodeMetrics, resourceType, noMetrics = false, showPercentage = false } = props;
   const { t } = useTranslation(['translation']);
   let [used, capacity] = [0, 0];
 
@@ -55,12 +69,21 @@ export function UsageBarChart(props: UsageBarChartProps) {
     );
   }
 
+  const chart = <PercentageBar data={data} total={capacity} tooltipFunc={tooltipFunc} />;
+  const measured = nodeMetrics?.some(item => item.metadata.name === node.getName());
   return noMetrics ? (
     <>
       <Typography display="inline">{getResourceStr(capacity, resourceType)}</Typography>
       <TooltipIcon>{t('translation|Install the metrics-server to get usage data.')}</TooltipIcon>
     </>
+  ) : showPercentage ? (
+    <Box sx={{ display: 'grid', gap: 0.25, minWidth: 66 }}>
+      <Typography variant="caption">
+        {measured ? getPercentStr(used, capacity) ?? '—' : '—'}
+      </Typography>
+      {chart}
+    </Box>
   ) : (
-    <PercentageBar data={data} total={capacity} tooltipFunc={tooltipFunc} />
+    chart
   );
 }

@@ -1,0 +1,15 @@
+{
+  "name": "headlamp-bbt-bundled-plugins",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node prepare.mjs"
+  },
+  "dependencies": {
+    "@babel/parser": "7.29.15",
+    "@babel/traverse": "7.29.15",
+    "magic-string": "^0.30.17",
+    "tar": "^7.5.22"
+  }
+}

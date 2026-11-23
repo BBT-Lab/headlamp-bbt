@@ -11,6 +11,7 @@
  */
 import { Icon } from '@iconify/react';
 import { K8s, Router } from '@kinvolk/headlamp-plugin/lib';
+import { request } from '@kinvolk/headlamp-plugin/lib/ApiProxy';
 import {
   DateLabel,
   Link,
@@ -24,6 +25,14 @@ import { Alert, Box, Chip, FormControlLabel, Switch, Tooltip, Typography } from 
 import React from 'react';
 import { useSelector } from 'react-redux';
 import { useLocation } from 'react-router-dom';
+import { eventReasonLabel } from '../../../../../frontend/src/lib/k8s/eventReason';
+import { useGpuTelemetry } from '../../../../../frontend/src/lib/k8s/gpu/hooks';
+import { gpuUsage } from '../../../../../frontend/src/lib/k8s/gpu/summary';
+import {
+  gpuOccupationKnown,
+  type GpuTelemetry,
+} from '../../../../../frontend/src/lib/k8s/gpu/telemetry';
+import { podDisplayPhase } from '../../../../../frontend/src/lib/k8s/podDisplayPhase';
 import {
   Bar,
   cardGrid,
@@ -64,6 +73,7 @@ import {
   WorkloadJson,
 } from './clusterHealth';
 import { UsageTrends } from './UsageTrends';
+import { useVolcanoCapacity, type VolcanoCapacity } from './volcanoCapacity';
 import { usePlusText } from '../i18n';
 
 const { Node, Pod, Namespace, Deployment, StatefulSet, DaemonSet } = K8s.ResourceClasses;
@@ -99,6 +109,7 @@ function UsageRow({
   unit,
   format,
   tone,
+  amount,
 }: {
   label: string;
   used?: number;
@@ -106,6 +117,7 @@ function UsageRow({
   unit: string;
   format: (value: number) => string;
   tone?: Tone | 'neutral';
+  amount?: string;
 }) {
   const hasUsage = used !== undefined;
   return (
@@ -115,8 +127,7 @@ function UsageRow({
           {label}
         </Typography>
         <Typography variant="body2" color="text.secondary">
-          {hasUsage ? `${format(used)} / ` : ''}
-          {format(total)} {unit}
+          {amount ?? `${hasUsage ? format(used) + ' / ' : ''}${format(total)} ${unit}`}
         </Typography>
         <Typography variant="body2" sx={{ fontWeight: 700, minWidth: 40, textAlign: 'right' }}>
           {hasUsage ? percent(used, total) : '—'}
@@ -131,21 +142,33 @@ function UsageRow({
   );
 }
 
+/** 将首页的Pod超时结束计入正常完成。 */
+function overviewPodPhase(pod: PodJson): string | undefined {
+  if (pod.status?.phase === 'Failed' && pod.status.reason === 'DeadlineExceeded')
+    return 'Succeeded';
+  return podDisplayPhase(pod);
+}
+
 function CapacityPanel({
   nodes,
   pods,
   metrics,
   metricsUnavailable,
+  gpu,
+  volcano,
 }: {
   nodes: NodeJson[];
   pods: PodJson[] | null;
   metrics: MetricsJson[] | null;
   metricsUnavailable: boolean;
+  gpu?: GpuTelemetry;
+  volcano?: VolcanoCapacity;
 }) {
   const { t } = usePlusText();
   const capacity = clusterCapacity(nodes, metrics);
-  const phases = podPhases(pods ?? []);
+  const phases = podPhases(pods ?? [], overviewPodPhase);
   const scheduled = phases.running + phases.pending + phases.unknown;
+  const gpuMetrics = gpuUsage(gpu?.cards ?? [], gpuOccupationKnown(gpu));
   return (
     <>
       <UsageRow
@@ -182,6 +205,45 @@ function CapacityPanel({
           <LegendDot color="text.disabled" label={t('Completed')} value={phases.succeeded} />
         </Box>
       )}
+      {gpuMetrics.total > 0 && (
+        <Box sx={{ pt: 0.5, mt: 1.25, borderTop: 1, borderColor: 'divider' }}>
+          <UsageRow
+            label={t('Average GPU utilization')}
+            used={gpuMetrics.utilization}
+            total={100}
+            unit="%"
+            format={formatCores}
+            amount=""
+          />
+          <UsageRow
+            label={t('Occupied GPUs')}
+            used={gpuMetrics.occupied}
+            total={gpuMetrics.total}
+            unit=""
+            format={formatCores}
+            amount={`${gpuMetrics.occupied ?? '—'}/${gpuMetrics.total}`}
+          />
+          {gpuMetrics.memoryTotal !== undefined && (
+            <UsageRow
+              label={t('GPU memory utilization')}
+              used={gpuMetrics.memoryUsed}
+              total={gpuMetrics.memoryTotal}
+              unit="GiB"
+              format={value => formatGiB(value * 2 ** 20)}
+            />
+          )}
+        </Box>
+      )}
+      {volcano && (
+        <Box sx={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 1.5, mt: 1 }}>
+          <Typography variant="body2" fontWeight={700}>
+            Volcano
+          </Typography>
+          <LegendDot color="success.main" label={t('Running')} value={volcano.running} />
+          <LegendDot color="warning.main" label={t('Queued')} value={volcano.pending} />
+          <LegendDot color="info.main" label={t('Queues')} value={volcano.queues} />
+        </Box>
+      )}
     </>
   );
 }
@@ -190,18 +252,41 @@ function CapacityPanel({
 // Nodes
 // ---------------------------------------------------------------------------------------------
 
-function MiniUsage({ label, used, total }: { label: string; used: number; total: number }) {
+function MiniUsage({
+  label,
+  used,
+  total,
+  showPercent = true,
+}: {
+  label: string;
+  used?: number;
+  total: number;
+  showPercent?: boolean;
+}) {
   return (
-    <Box sx={{ width: 110 }}>
-      <Typography variant="caption" color="text.secondary" component="div">
-        {label} {percent(used, total)}
+    <Box sx={{ width: 110, minWidth: 48 }}>
+      <Typography variant="caption" color="text.secondary" component="div" noWrap>
+        {label}
+        {showPercent && ` ${used === undefined ? '—' : percent(used, total)}`}
       </Typography>
-      <Bar value={used} total={total} tone={usageTone(used, total)} />
+      <Bar
+        value={used ?? 0}
+        total={total}
+        tone={used === undefined ? 'neutral' : usageTone(used, total)}
+      />
     </Box>
   );
 }
 
-function NodeList({ nodes, metrics }: { nodes: KubeObject[]; metrics: MetricsJson[] | null }) {
+function NodeList({
+  nodes,
+  metrics,
+  gpu,
+}: {
+  nodes: KubeObject[];
+  metrics: MetricsJson[] | null;
+  gpu?: GpuTelemetry;
+}) {
   const { t } = usePlusText();
   return (
     <ScrollArea maxHeight={360}>
@@ -209,17 +294,27 @@ function NodeList({ nodes, metrics }: { nodes: KubeObject[]; metrics: MetricsJso
         const json = node.jsonData as NodeJson;
         const ready = isNodeReady(json);
         const usage = nodeUsage(json, metrics);
+        const gpuMetrics = gpuUsage(
+          gpu?.cards.filter(card => card.node === node.metadata.name) ?? [],
+          gpuOccupationKnown(gpu, node.metadata.name)
+        );
         return (
           <Box
             key={node.metadata.uid}
-            sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flexWrap: 'wrap', ...rowSx }}
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 1.5,
+              flexWrap: gpuMetrics.total ? 'nowrap' : 'wrap',
+              ...rowSx,
+            }}
           >
             <Tooltip title={ready ? t('Ready') : t('Not ready')}>
               <Box sx={{ color: ready ? 'success.main' : 'error.main', display: 'flex' }}>
                 <Icon icon={ready ? 'mdi:check-circle' : 'mdi:alert-circle'} width={20} />
               </Box>
             </Tooltip>
-            <Box sx={{ flexGrow: 1, minWidth: 140 }}>
+            <Box sx={{ flexGrow: 1, minWidth: gpuMetrics.total ? 75 : 140 }}>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
                 <Link kubeObject={node} />
                 {nodeRoles(json).map(role => (
@@ -236,12 +331,16 @@ function NodeList({ nodes, metrics }: { nodes: KubeObject[]; metrics: MetricsJso
             {usage && (
               <>
                 <MiniUsage label="CPU" used={usage.cpu.used} total={usage.cpu.total} />
-                <MiniUsage
-                  label={t('Memory')}
-                  used={usage.memory.used}
-                  total={usage.memory.total}
-                />
+                <MiniUsage label={t('RAM')} used={usage.memory.used} total={usage.memory.total} />
               </>
+            )}
+            {gpuMetrics.total > 0 && (
+              <MiniUsage
+                label={`GPU ${gpuMetrics.occupied ?? '—'}/${gpuMetrics.total}`}
+                used={gpuMetrics.utilization}
+                total={100}
+                showPercent={false}
+              />
             )}
           </Box>
         );
@@ -285,7 +384,7 @@ const EVENT_WARNING_SWITCH_KEY = 'EVENT_WARNING_SWITCH_FILTER_STORAGE_KEY';
 type KubeEventObject = InstanceType<typeof Event>;
 
 function EventsSection() {
-  const { t } = usePlusText();
+  const { t, language } = usePlusText();
   const location = useLocation();
   const eventsFilter = new URLSearchParams(location.search).get('eventsFilter');
   const filterFunc = useFilterFunc<KubeEventObject>(['.jsonData.involvedObject.kind']);
@@ -347,12 +446,12 @@ function EventsSection() {
           label: t('Reason'),
           gridTemplate: 'min-content',
           filterVariant: 'multi-select',
-          getValue: event => t(event.reason),
+          getValue: event => eventReasonLabel(event.reason, language),
           render: event => (
-            <Tooltip title={t(event.reason)}>
+            <Tooltip title={eventReasonLabel(event.reason, language)}>
               <span>
                 <StatusLabel status={event.type === 'Normal' ? '' : 'warning'}>
-                  {t(event.reason)}
+                  {eventReasonLabel(event.reason, language)}
                 </StatusLabel>
               </span>
             </Tooltip>
@@ -400,6 +499,9 @@ function EventsSection() {
 export function ClusterOverview() {
   const { t } = usePlusText();
   const cluster = K8s.useCluster();
+  const { clusters: gpuClusters } = useGpuTelemetry(request, cluster ? [cluster] : []);
+  const gpu = cluster ? gpuClusters[cluster] : undefined;
+  const volcano = useVolcanoCapacity(cluster);
   const clusters = K8s.useClustersConf();
   const displayName = cluster ? clusters?.[cluster]?.meta_data?.rancherDisplayName || cluster : '';
   const version = useKubernetesVersion(cluster);
@@ -460,7 +562,11 @@ export function ClusterOverview() {
       }
     };
     collect(nodes, json => nodeIssues(json as NodeJson, t));
-    collect(pods, json => podIssues(json as PodJson, undefined, t));
+    collect(pods, json =>
+      overviewPodPhase(json as PodJson) === 'Succeeded'
+        ? []
+        : podIssues(json as PodJson, undefined, t)
+    );
     collect(deployments, json => workloadIssues('Deployment', json as WorkloadJson, t));
     collect(statefulSets, json => workloadIssues('StatefulSet', json as WorkloadJson, t));
     collect(daemonSets, json => workloadIssues('DaemonSet', json as WorkloadJson, t));
@@ -471,7 +577,7 @@ export function ClusterOverview() {
   const podJson = React.useMemo(() => pods?.map(p => p.jsonData as PodJson) ?? null, [pods]);
   const metricsJson = metrics as MetricsJson[] | null;
   const capacity = clusterCapacity(nodeJson, metricsJson);
-  const phases = podPhases(podJson ?? []);
+  const phases = podPhases(podJson ?? [], overviewPodPhase);
   const readyNodes = nodeJson.filter(isNodeReady).length;
   const allWorkloads = workloads.flatMap(group => group.items ?? []);
   const healthyWorkloads = allWorkloads.filter(item =>
@@ -545,45 +651,6 @@ export function ClusterOverview() {
       tone: 'primary',
       to: Router.createRouteURL('namespaces'),
     },
-    {
-      id: 'cpu',
-      label: t('CPU usage'),
-      value: capacity.cpu.used !== undefined ? percent(capacity.cpu.used, capacity.cpu.total) : '—',
-      caption:
-        capacity.cpu.used !== undefined
-          ? t('{{used}} of {{total}} cores', {
-              used: formatCores(capacity.cpu.used),
-              total: formatCores(capacity.cpu.total),
-            })
-          : nodes
-          ? t('{{total}} cores allocatable', { total: formatCores(capacity.cpu.total) })
-          : t('Not available'),
-      icon: 'mdi:chip',
-      tone:
-        capacity.cpu.used !== undefined ? usageTone(capacity.cpu.used, capacity.cpu.total) : 'info',
-    },
-    {
-      id: 'memory',
-      label: t('Memory usage'),
-      value:
-        capacity.memory.used !== undefined
-          ? percent(capacity.memory.used, capacity.memory.total)
-          : '—',
-      caption:
-        capacity.memory.used !== undefined
-          ? t('{{used}} of {{total}} GiB', {
-              used: formatGiB(capacity.memory.used),
-              total: formatGiB(capacity.memory.total),
-            })
-          : nodes
-          ? t('{{total}} GiB allocatable', { total: formatGiB(capacity.memory.total) })
-          : t('Not available'),
-      icon: 'mdi:memory',
-      tone:
-        capacity.memory.used !== undefined
-          ? usageTone(capacity.memory.used, capacity.memory.total)
-          : 'info',
-    },
   ];
 
   return (
@@ -646,6 +713,8 @@ export function ClusterOverview() {
             pods={podJson}
             metrics={metricsJson}
             metricsUnavailable={!!metricsError}
+            gpu={gpu}
+            volcano={volcano}
           />
         </Panel>
       </Box>
@@ -654,6 +723,8 @@ export function ClusterOverview() {
         cpuCapacity={nodes ? capacity.cpu.total : undefined}
         memoryCapacity={nodes ? capacity.memory.total : undefined}
         capacityLabel={t('allocatable')}
+        gpuConfig={gpu?.config}
+        gpuSampledAt={gpu?.sampledAt}
       />
 
       <Box sx={twoColumns}>
@@ -663,7 +734,7 @@ export function ClusterOverview() {
           action={nodes && <Chip size="small" variant="outlined" label={nodes.length} />}
         >
           {nodes ? (
-            <NodeList nodes={nodes} metrics={metricsJson} />
+            <NodeList nodes={nodes} metrics={metricsJson} gpu={gpu} />
           ) : (
             <Typography variant="body2" color="text.secondary">
               {nodesError ? t('Nodes are not available.') : t('Loading…')}

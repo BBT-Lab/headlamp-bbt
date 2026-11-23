@@ -72,16 +72,24 @@ COPY ./plugins/bbt/headlamp-plus/package*.json ./
 RUN --mount=type=cache,target=/root/.npm npm ci
 COPY ./plugins/bbt/headlamp-plus ./
 COPY ./frontend/src/lib/k8s/podDisplayPhase.ts /headlamp/frontend/src/lib/k8s/podDisplayPhase.ts
+COPY ./frontend/src/lib/k8s/eventReason.ts /headlamp/frontend/src/lib/k8s/eventReason.ts
+COPY ./frontend/src/lib/k8s/gpu /headlamp/frontend/src/lib/k8s/gpu
+RUN npm run build
+WORKDIR /headlamp/plugins/bbt/gpu-monitor
+COPY ./plugins/bbt/gpu-monitor/package*.json ./
+RUN --mount=type=cache,target=/root/.npm npm ci
+COPY ./plugins/bbt/gpu-monitor ./
 RUN npm run build
 
 # Static (officially shipped) plugins
 FROM --platform=${BUILDPLATFORM} frontend-build AS static-plugins
-RUN apt-get update && apt-get install -y jq
-COPY ./container/build-manifest.json ./container/fetch-plugins.sh /tools/
-
+RUN apt-get update && apt-get install -y --no-install-recommends git
 WORKDIR /tools
-RUN mkdir -p /plugins
-RUN ./fetch-plugins.sh /plugins/
+COPY ./plugins/bbt/bundled/package*.json ./
+RUN --mount=type=cache,target=/root/.npm npm ci --omit=dev
+COPY ./plugins/bbt/bundled/ ./
+COPY ./container/build-manifest.json ./
+RUN --mount=type=cache,target=/root/.npm HEADLAMP_BBT_PLUGIN_MANIFEST=/tools/build-manifest.json node prepare.mjs /plugins
 
 FROM image-base AS final
 
@@ -102,6 +110,7 @@ COPY --from=frontend --link /headlamp/frontend/build /headlamp/frontend
 COPY --from=frontend --link /headlamp/plugins /headlamp/plugins
 COPY --from=static-plugins --link /plugins /headlamp/static-plugins
 COPY --from=bbt-plugins --link /headlamp/.plugins/headlamp-plus /headlamp/static-plugins/headlamp-plus
+COPY --from=bbt-plugins --link /headlamp/.plugins/headlamp-gpu-monitor /headlamp/static-plugins/headlamp-gpu-monitor
 
 RUN chown -R headlamp:headlamp /headlamp
 USER headlamp
