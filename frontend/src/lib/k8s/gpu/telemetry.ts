@@ -1,4 +1,20 @@
 /*
+ * Copyright 2026 The Kubernetes Authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/*
  * 文件描述：用Headlamp当前用户身份读取GPU设备、分配和历史数据。
  * 项目名称：Headlamp BBT
  * 文件名称：telemetry.ts
@@ -7,18 +23,18 @@
  */
 
 import { response, type Transport } from './client';
-import { defaultConfig, queryPath, type ConnectionConfig } from './config';
+import { type ConnectionConfig, defaultConfig, queryPath } from './config';
 import { discoverSources } from './discovery';
 import {
   fields,
   freshQuery,
+  type Gpu,
   identity,
   normalize,
-  workload,
-  type Gpu,
   type Series,
+  workload,
 } from './metrics';
-import { gpuWorkloads, physicalGpus, type PhysicalGpu } from './summary';
+import { gpuWorkloads, type PhysicalGpu, physicalGpus } from './summary';
 
 const preferredServices = [
   { namespace: 'monitoring', service: 'prometheus-stack-kube-prom-prometheus' },

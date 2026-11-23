@@ -1,4 +1,20 @@
 /*
+ * Copyright 2026 The Kubernetes Authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/*
  * 文件描述：订阅当前集群的GPU实时样本与趋势。
  * 项目名称：Headlamp BBT
  * 文件名称：hooks.ts
@@ -9,7 +25,7 @@
 import { useEffect, useState } from 'react';
 import type { Transport } from './client';
 import type { ConnectionConfig } from './config';
-import { loadGpuRange, loadGpuTelemetry, type GpuRange, type GpuTelemetry } from './telemetry';
+import { type GpuRange, type GpuTelemetry, loadGpuRange, loadGpuTelemetry } from './telemetry';
 
 /** 为指定集群加载GPU数据，集群改变时取消原请求。 */
 export function useGpuTelemetry(
