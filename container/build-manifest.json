@@ -29,7 +29,8 @@
       "name": "headlamp_kubevirt",
       "archive": "https://codeload.github.com/naval-group/headlamp-kubevirt/tar.gz/ce30632660057cd909f44958f3b4fbaae8bfb7d0",
       "sha256": "f4ce1a18fdedb3e6aac99a532371ebc2a62dbc21a634ad739e40885b54c344cc",
-      "patch": "kubevirt-0.3.1.zh.patch"
+      "patch": "kubevirt-0.3.1.zh.patch",
+      "extraPatches": ["kubevirt-0.3.1.metrics.patch"]
     }
   ]
 }

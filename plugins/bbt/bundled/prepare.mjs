@@ -66,11 +66,13 @@ async function archiveFor({ archive, sha256 }) {
  * 从固定上游源码重建使用原生语言包的KubeVirt插件。
  *
  * :param source: 已解包的上游源码。
- * :param patch: BBT本地化差异文件名。
+ * :param patches: 按顺序应用的BBT差异文件名。
  */
-async function buildKubeVirt(source, patch) {
+async function buildKubeVirt(source, patches) {
   const options = { cwd: source, stdio: 'inherit' };
-  execFileSync('git', ['apply', '-p2', join(directory, patch)], options);
+  for (const patch of patches) {
+    execFileSync('git', ['apply', '-p2', join(directory, patch)], options);
+  }
   if (process.platform === 'win32') {
     execFileSync(
       process.env.ComSpec ?? 'cmd.exe',
@@ -123,7 +125,7 @@ async function stagePlugin(plugin) {
     await extract({ file: await archiveFor(plugin), cwd: work, strip: 1, strict: true });
     const metadataPath = join(work, 'package.json');
     if (patch) {
-      await buildKubeVirt(work, patch);
+      await buildKubeVirt(work, [patch, ...(plugin.extraPatches ?? [])]);
     } else {
       const main = join(work, 'main.js');
       const dictionary = await readJson(join(directory, 'locales', name + '.zh.json'), {});

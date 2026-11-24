@@ -70,8 +70,8 @@ const bilingualPath = 'locales/zh-x-bbt/translation.json';
 const bilingual = JSON.parse(readFileSync(path.join(root, bilingualPath), 'utf8'));
 for (const key of keys) {
   if (key === 'Pod' || key === 'Pods') {
-    assert.equal(locale[key], 'Pod', '简体中文保留Pod资源名');
-    assert.equal(bilingual[key], 'Pod', '双语保留Pod资源名');
+    assert.equal(locale[key], '容器组', '简体中文使用容器组');
+    assert.equal(bilingual[key], '容器组(Pod)', '双语显示容器组(Pod)');
   } else {
     assert.match(locale[key] ?? '', /\p{Script=Han}/u, '简体中文文案缺失：' + key);
   }

@@ -48,7 +48,7 @@
   "Duration (s)": "耗时（秒）",
   "Resource Usage": "资源用量",
   "Resource Limit": "资源上限",
-  "Pending Pods": "等待中的 Pod",
+  "Pending Pods": "等待中的 容器组",
   "Num Active Jobs": "活跃作业数",
   "Num Replicas": "副本数",
   "Instance": "实例",

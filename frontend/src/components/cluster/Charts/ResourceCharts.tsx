@@ -104,8 +104,9 @@ export function PodCapacityCircularChart(props: { node: Node | null; pods: Pod[]
   const { t } = useTranslation(['translation', 'glossary']);
   const used = pods?.length ?? -1;
   const rawTotal = node?.status?.allocatable?.pods ?? node?.status?.capacity?.pods;
-  const parsedTotal = Number(rawTotal);
-  const total = Number.isFinite(parsedTotal) ? parsedTotal : -1;
+  // Pod上限同样使用Kubernetes Quantity序列化，例如5k表示5000。
+  const parsedTotal = rawTotal === undefined ? -1 : parseDiskSpace(rawTotal);
+  const total = Number.isSafeInteger(parsedTotal) ? parsedTotal : -1;
   const isLoading = pods === null || total < 0;
 
   function getLabel() {
