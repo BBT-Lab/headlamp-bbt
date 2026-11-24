@@ -14,6 +14,7 @@ Headlamp BBT基于[kubernetes-sigs/headlamp](https://github.com/kubernetes-sigs/
 - 所有改动通过GitHub Pull Request合并到`main`。日常开发使用独立分支，Issue和Pull Request均在GitHub处理。
 - 所有推送都要同步到GitHub和GitLab，包括开发分支、`main`和发布标签。推送后分别核对两个仓库的对应引用；单个远端失败时，修复并补推，直至两边一致。
 - 每次发布相同版本时，在GitHub和GitLab分别创建Release，并确保版本标签和发布内容一致。
+- GitHub的Headlamp BBT Release工作流使用同一源码构建网页镜像和Windows、macOS、Linux客户端，所有附件齐全后发布同一个Release。
 - 发布标签格式为`v{上游版本号}.bbt.{序号}-YYMMDDHHmm`。同一上游版本的序号从1开始递增，时间使用香港时区，由GitHub发布工作流生成。
 - 每次发布新版本，通过GitLab中的GitOps配置和Argo CD将网页部署到`headlamp.bbt.sspu.edu.cn`。
 - 除GitOps外，自动化操作和Actions均在GitHub执行。GitLab用于仓库同步、Release和GitOps。

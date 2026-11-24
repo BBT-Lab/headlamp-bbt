@@ -37,7 +37,16 @@ import {
   loadGpuPods,
   type GpuPodAccess,
 } from '../../../../frontend/src/lib/k8s/gpu/telemetry';
-import { GpuDeviceTable, gpuInstanceLabel, gpuPercent, type GpuSelection } from './DeviceTable';
+import {
+  allocation,
+  GpuDeviceTable,
+  gpuInstanceLabel,
+  gpuPercent,
+  type GpuSelection,
+  VgpuQuotaSummary,
+  VgpuUsageLine,
+} from './DeviceTable';
+import { loadVgpuTelemetry, type VgpuAllocation } from './VgpuTelemetry';
 
 /** 随当前集群和详情作用域读取GPU数据。 */
 export function GpuMonitor({ cluster, scope }: { cluster?: string; scope?: Scope }) {
@@ -50,20 +59,31 @@ export function GpuMonitor({ cluster, scope }: { cluster?: string; scope?: Scope
 function ClusterMonitor({ cluster, scope }: { cluster: string; scope?: Scope }) {
   const { t } = useTranslation('headlamp-gpu-monitor');
   const [filter, setFilter] = useState('');
+  const [nodeFilter, setNodeFilter] = useState('');
   const [hours, setHours] = useState(6);
   const [selection, setSelection] = useState<GpuSelection>();
   const [refresh, setRefresh] = useState(0);
   const [pods, setPods] = useState<Record<string, GpuPodAccess>>({});
+  const [sharedCards, setSharedCards] = useState(new Map<string, VgpuAllocation>());
   const { clusters, loading } = useGpuTelemetry(request, [cluster], refresh);
   const data = clusters[cluster];
+  const nodes = useMemo(
+    () =>
+      [...new Set((data?.cards ?? []).map(card => card.node))].sort((a, b) =>
+        a.localeCompare(b, undefined, { numeric: true })
+      ),
+    [data]
+  );
+  const activeNode = nodes.includes(nodeFilter) ? nodeFilter : '';
   const cards = useMemo(
     () =>
       (data?.cards ?? []).flatMap(card => {
+        if (activeNode && card.node !== activeNode) return [];
         if (!scope) return [card];
         const devices = card.devices.filter(device => inScope(device, scope));
         return devices.length ? [{ ...card, devices }] : [];
       }),
-    [data, scope]
+    [activeNode, data, scope]
   );
   const range = useGpuRange(
     request,
@@ -101,8 +121,33 @@ function ClusterMonitor({ cluster, scope }: { cluster: string; scope?: Scope }) 
     return () => owner.abort();
   }, [cards, cluster, data]);
 
+  useEffect(() => {
+    if (!data || scope) return;
+    const owner = new AbortController();
+    loadVgpuTelemetry(cluster, data, owner.signal)
+      .then(result => {
+        if (!owner.signal.aborted) setSharedCards(result);
+      })
+      .catch(() => {
+        if (!owner.signal.aborted) setSharedCards(new Map());
+      });
+    return () => owner.abort();
+  }, [cluster, data, scope]);
+
   if (scope && !cards.length) return null;
-  const usage = gpuUsage(cards, gpuOccupationKnown(data, scope?.node));
+  const filterNode = scope?.node || activeNode || undefined;
+  const confirmedByVolcano =
+    !!data &&
+    [...data.unmappedNodes].every(node => {
+      if (node === '*') return false;
+      if (filterNode && node !== filterNode) return true;
+      const devices = cards.filter(item => item.node === node);
+      return devices.length > 0 && devices.every(item => sharedCards.has(item.id));
+    });
+  const usage = gpuUsage(
+    cards.map(item => (sharedCards.get(item.id)?.count ? { ...item, occupied: true } : item)),
+    gpuOccupationKnown(data, filterNode) || confirmedByVolcano
+  );
   const filtered = cards.filter(item =>
     `${item.node} GPU ${item.index} ${item.acceleratorId} ${item.model} ${item.devices
       .map(gpu => gpu.instance)
@@ -119,13 +164,87 @@ function ClusterMonitor({ cluster, scope }: { cluster: string; scope?: Scope }) 
     [t('Average GPU utilization'), gpuPercent(usage.utilization)],
     [t('Used / total GPU memory'), memory],
   ];
+  const selectedShared = card && sharedCards.get(card.id);
+  const selectedWorkload =
+    selection?.cardId === card?.id
+      ? selectedShared?.workloads.find(item => item.name === selection?.workloadName)
+      : undefined;
+  const selectedWorkloads = selectedWorkload
+    ? [selectedWorkload.name]
+    : selectedShared?.count
+    ? selectedShared.workloads.length
+      ? selectedShared.workloads.map(item => item.name)
+      : [t('Assignment unknown')]
+    : card && data
+    ? [
+        ...new Set(
+          (selectedDevice ? [selectedDevice] : card.devices).flatMap(device =>
+            allocation(
+              device,
+              pods,
+              data.sampledAt,
+              undefined,
+              selectedShared?.count === 0 || gpuOccupationKnown(data, card.node),
+              t
+            ).map(item => item.label)
+          )
+        ),
+      ]
+    : [];
   return (
     <Box sx={{ display: 'grid', gap: 2.5, p: 1 }}>
-      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 2 }}>
-        <Typography variant="h5" component="h1">
+      <Box
+        sx={{
+          display: 'grid',
+          gridTemplateColumns: 'auto minmax(0, 1fr) auto',
+          alignItems: 'center',
+          gap: 2,
+        }}
+      >
+        <Typography variant="h5" component="h1" sx={{ whiteSpace: 'nowrap' }}>
           {t('GPU Monitor')}
         </Typography>
-        <Button onClick={() => setRefresh(value => value + 1)}>{t('Refresh')}</Button>
+        <Box
+          role="group"
+          aria-label={t('GPU summary')}
+          sx={{
+            alignSelf: 'stretch',
+            display: 'flex',
+            gap: 1,
+            overflowX: 'auto',
+            scrollbarWidth: 'none',
+          }}
+        >
+          {data &&
+            summary.map(([label, value]) => (
+              <Paper
+                key={label}
+                variant="outlined"
+                sx={{
+                  flex: '1 0 auto',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 1,
+                  px: 1.25,
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                <Typography variant="caption" color="text.secondary">
+                  {label}
+                </Typography>
+                <Typography
+                  variant="body2"
+                  sx={{ fontWeight: 650, fontVariantNumeric: 'tabular-nums' }}
+                >
+                  {value}
+                </Typography>
+              </Paper>
+            ))}
+        </Box>
+        <Button size="small" onClick={() => setRefresh(value => value + 1)}>
+          {t('Refresh')}
+        </Button>
       </Box>
       {loading && !data ? (
         <CircularProgress size={24} />
@@ -135,24 +254,46 @@ function ClusterMonitor({ cluster, scope }: { cluster: string; scope?: Scope }) 
         </Typography>
       ) : (
         <>
-          <Box
-            sx={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))',
-              gap: 2,
-            }}
-          >
-            {summary.map(([label, value]) => (
-              <Paper key={label} variant="outlined" sx={{ p: 2.5 }}>
-                <Typography variant="body2" color="text.secondary">
-                  {label}
-                </Typography>
-                <Typography variant="h4" sx={{ mt: 0.5, fontVariantNumeric: 'tabular-nums' }}>
-                  {value}
-                </Typography>
-              </Paper>
-            ))}
-          </Box>
+          {!scope && nodes.length > 0 && (
+            <Box
+              role="group"
+              aria-label={t('Filter by GPU node')}
+              sx={{
+                display: 'flex',
+                gap: '4px',
+                overflowX: 'auto',
+                minWidth: 0,
+                pb: 0.5,
+                '& > button': {
+                  flex: '0 0 min(76px, max(48px, calc((100% - 36px) / 10)))',
+                  minWidth: 0,
+                  px: 0.75,
+                  display: 'block',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                  textTransform: 'none',
+                },
+              }}
+            >
+              {['', ...nodes].map(node => (
+                <Button
+                  key={node}
+                  size="small"
+                  variant={node === activeNode ? 'contained' : 'outlined'}
+                  disableElevation
+                  aria-pressed={node === activeNode}
+                  title={node || t('All')}
+                  onClick={() => {
+                    setNodeFilter(node);
+                    setSelection(undefined);
+                  }}
+                >
+                  {node || t('All')}
+                </Button>
+              ))}
+            </Box>
+          )}
           <Paper variant="outlined" sx={{ minWidth: 0, overflow: 'hidden' }}>
             <Box
               sx={{
@@ -178,7 +319,17 @@ function ClusterMonitor({ cluster, scope }: { cluster: string; scope?: Scope }) 
               data={data}
               history={range}
               pods={pods}
-              selected={card ? { cardId: card.id, deviceId: selectedDevice?.id } : undefined}
+              showNodes={!activeNode}
+              sharedCards={sharedCards}
+              selected={
+                card
+                  ? {
+                      cardId: card.id,
+                      deviceId: selectedDevice?.id,
+                      workloadName: selectedWorkload?.name,
+                    }
+                  : undefined
+              }
               onSelect={setSelection}
               t={t}
             />
@@ -195,10 +346,28 @@ function ClusterMonitor({ cluster, scope }: { cluster: string; scope?: Scope }) 
                   mb: 1,
                 }}
               >
-                <Typography variant="subtitle1" component="h2">
-                  {t('Device metrics history')} · {card.node} / GPU {card.index}
-                  {selectedDevice?.instance && ` · ${gpuInstanceLabel(selectedDevice.instance)}`}
-                </Typography>
+                <Box sx={{ minWidth: 0 }}>
+                  <Typography variant="subtitle1" component="h2">
+                    {t('Device metrics history')} · {card.node} / GPU {card.index}
+                    {selectedDevice?.instance && ` · ${gpuInstanceLabel(selectedDevice.instance)}`}
+                  </Typography>
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'baseline',
+                      flexWrap: 'wrap',
+                      gap: 1.25,
+                    }}
+                  >
+                    {selectedWorkloads.length > 0 && (
+                      <Typography variant="caption" color="text.secondary">
+                        {t('Workload')} · {selectedWorkloads.join('、')}
+                      </Typography>
+                    )}
+                    {selectedShared && <VgpuQuotaSummary shared={selectedShared} t={t} />}
+                    {selectedWorkload && <VgpuUsageLine workload={selectedWorkload} t={t} />}
+                  </Box>
+                </Box>
                 <ToggleButtonGroup
                   exclusive
                   size="small"

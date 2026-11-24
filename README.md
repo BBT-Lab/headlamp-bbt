@@ -47,6 +47,8 @@ BBT单点登录通过Rancher OIDC沿用现有账号，自动发现当前用户�
 
 每次发布新版本时，在GitHub和GitLab发布相同版本，通过GitLab的GitOps配置和Argo CD将网页部署到[headlamp.bbt.sspu.edu.cn](https://headlamp.bbt.sspu.edu.cn)。
 
+同一个Release提供Windows、macOS和Linux桌面安装包，随附简体中文和中英双语的KubeVirt插件及GPU监控插件。
+
 版本标签格式为`v{上游版本号}.bbt.{序号}-YYMMDDHHmm`。同一上游版本的序号从1开始递增，时间使用香港时区。GitHub发布工作流自动生成标签。
 
 ## 许可证
