@@ -5,6 +5,7 @@
 // 日期：2026-11-21
 
 import { podDisplayPhase } from '../../../../../frontend/src/lib/k8s/podDisplayPhase';
+import { parseDiskSpace as parseK8sQuantity } from '../../../../../frontend/src/lib/units';
 import { t as englishText } from '../common/i18n';
 import type { Translate } from '../i18n';
 
@@ -363,7 +364,10 @@ export function clusterCapacity(
       total: sum(allocatable('memory').map(parseMemory)),
       used: metrics ? sum(metrics.map(m => parseMemory(m.usage?.memory))) : undefined,
     },
-    podSlots: sum(allocatable('pods').map(value => parseInt(value ?? '0', 10) || 0)),
+    podSlots: sum(allocatable('pods').map(value => {
+      const count = parseK8sQuantity(value ?? '');
+      return Number.isSafeInteger(count) && count >= 0 ? count : 0;
+    })),
   };
 }
 

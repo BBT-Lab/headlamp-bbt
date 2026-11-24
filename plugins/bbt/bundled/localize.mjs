@@ -69,6 +69,9 @@ const bilingualTerms = new Set([
  * :returns: 双语界面使用的文案。
  */
 export function bilingualText(key, chinese) {
+  if (/\bPods?\b/i.test(key) && chinese.includes('容器组')) {
+    return chinese.replace(/容器组(?!\(Pod\))/gu, '容器组(Pod)');
+  }
   return bilingualTerms.has(key) && key !== chinese ? `${chinese} (${key})` : chinese;
 }
 

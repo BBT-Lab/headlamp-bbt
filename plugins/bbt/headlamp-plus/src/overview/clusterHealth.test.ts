@@ -235,6 +235,11 @@ describe('aggregation', () => {
     expect(nodeUsage(node('c'), metrics)).toBeUndefined();
   });
 
+  it('将节点上带十进制后缀的Pod数量计入容量', () => {
+    const nodes = [node('edu4090', { status: { allocatable: { pods: '5k' } } }), node('other')];
+    expect(clusterCapacity(nodes).podSlots).toBe(5110);
+  });
+
   it('maps utilisation to a tone', () => {
     expect(usageTone(1, 10)).toBe('success');
     expect(usageTone(8, 10)).toBe('warning');

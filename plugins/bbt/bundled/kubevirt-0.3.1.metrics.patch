@@ -1,0 +1,432 @@
+diff --git a/localized/src/components/Overview/Overview.tsx b/localized/src/components/Overview/Overview.tsx
+index d0da884..0a7f547 100644
+--- a/localized/src/components/Overview/Overview.tsx
++++ b/localized/src/components/Overview/Overview.tsx
+@@ -256,6 +256,17 @@ export default function VirtualizationOverview() {
+     return allVms.filter(vm => vm.getNamespace() === selectedNamespace);
+   }, [allVms, selectedNamespace]);
+ 
++  const allVmsStopped = Array.isArray(allVms) && vms.every(vm =>
++    ['stopped', 'halted'].includes(vm.status?.printableStatus?.toLowerCase() ?? '')
++  );
++  const emptyMetrics = metricsEndpoint.loading
++    ? t('Loading metrics...')
++    : !metricsEndpoint.available
++    ? t(metricsEndpoint.source === 'none' ? 'Configure metrics endpoint' : 'Metrics endpoint is unavailable')
++    : allVmsStopped
++    ? t('No running virtual machines')
++    : t('No metrics available');
++
+   const stats = React.useMemo(() => {
+     if (!vms || !Array.isArray(vms)) {
+       return { total: 0, running: 0, stopped: 0, error: 0, migrating: 0, paused: 0 };
+@@ -485,11 +496,7 @@ export default function VirtualizationOverview() {
+                           }}
+                         >
+                           <Typography variant="body2" color="text.secondary">
+-                            {metricsEndpoint.loading
+-                              ? t('Loading metrics...')
+-                              : metricsEndpoint.available
+-                              ? 'No metrics available'
+-                              : 'Configure metrics endpoint'}
++                            {emptyMetrics}
+                           </Typography>
+                         </Box>
+                       )}
+@@ -505,7 +512,7 @@ export default function VirtualizationOverview() {
+                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+                       <Icon icon="mdi:network" width={24} color="#00acc1" />
+                       <Typography variant="subtitle2" sx={{ color: '#00acc1', fontWeight: 600 }}>
+-                        Network traffic
++                        {t('Network traffic')}
+                       </Typography>
+                     </Box>
+                     <Box
+@@ -562,9 +569,7 @@ export default function VirtualizationOverview() {
+                           }}
+                         >
+                           <Typography variant="body2" color="text.secondary">
+-                            {metricsEndpoint.available
+-                              ? 'No network activity'
+-                              : 'Configure metrics endpoint'}
++                            {metricsEndpoint.available && !allVmsStopped ? t('No network activity') : emptyMetrics}
+                           </Typography>
+                         </Box>
+                       )}
+@@ -637,9 +642,7 @@ export default function VirtualizationOverview() {
+                           }}
+                         >
+                           <Typography variant="body2" color="text.secondary">
+-                            {metricsEndpoint.available
+-                              ? 'No network activity'
+-                              : 'Configure metrics endpoint'}
++                            {metricsEndpoint.available && !allVmsStopped ? t('No network activity') : emptyMetrics}
+                           </Typography>
+                         </Box>
+                       )}
+@@ -712,9 +715,7 @@ export default function VirtualizationOverview() {
+                           }}
+                         >
+                           <Typography variant="body2" color="text.secondary">
+-                            {metricsEndpoint.available
+-                              ? 'No network errors'
+-                              : 'Configure metrics endpoint'}
++                            {metricsEndpoint.available && !allVmsStopped ? t('No network errors') : emptyMetrics}
+                           </Typography>
+                         </Box>
+                       )}
+@@ -802,11 +803,7 @@ export default function VirtualizationOverview() {
+                           }}
+                         >
+                           <Typography variant="body2" color="text.secondary">
+-                            {metricsEndpoint.loading
+-                              ? t('Loading metrics...')
+-                              : metricsEndpoint.available
+-                              ? 'No metrics available'
+-                              : 'Configure metrics endpoint'}
++                            {emptyMetrics}
+                           </Typography>
+                         </Box>
+                       )}
+@@ -879,9 +876,7 @@ export default function VirtualizationOverview() {
+                           }}
+                         >
+                           <Typography variant="body2" color="text.secondary">
+-                            {metricsEndpoint.available
+-                              ? 'No swap activity'
+-                              : 'Configure metrics endpoint'}
++                            {metricsEndpoint.available && !allVmsStopped ? t('No swap activity') : emptyMetrics}
+                           </Typography>
+                         </Box>
+                       )}
+@@ -954,9 +949,7 @@ export default function VirtualizationOverview() {
+                           }}
+                         >
+                           <Typography variant="body2" color="text.secondary">
+-                            {metricsEndpoint.available
+-                              ? 'No storage activity'
+-                              : 'Configure metrics endpoint'}
++                            {metricsEndpoint.available && !allVmsStopped ? t('No storage activity') : emptyMetrics}
+                           </Typography>
+                         </Box>
+                       )}
+@@ -1029,9 +1022,7 @@ export default function VirtualizationOverview() {
+                           }}
+                         >
+                           <Typography variant="body2" color="text.secondary">
+-                            {metricsEndpoint.available
+-                              ? 'No storage activity'
+-                              : 'Configure metrics endpoint'}
++                            {metricsEndpoint.available && !allVmsStopped ? t('No storage activity') : emptyMetrics}
+                           </Typography>
+                         </Box>
+                       )}
+diff --git a/localized/src/components/common/MetricsEndpointConfig.tsx b/localized/src/components/common/MetricsEndpointConfig.tsx
+index be3254f..48ee7e4 100644
+--- a/localized/src/components/common/MetricsEndpointConfig.tsx
++++ b/localized/src/components/common/MetricsEndpointConfig.tsx
+@@ -224,6 +224,8 @@ export default function MetricsEndpointConfig({ compact }: { compact?: boolean }
+       ? 'From ConfigMap'
+       : endpoint.source === 'localstorage'
+       ? 'From browser'
++      : endpoint.source === 'preset'
++      ? 'BBT preset'
+       : 'Not configured';
+ 
+   const sourceColor =
+@@ -475,7 +477,7 @@ export default function MetricsEndpointConfig({ compact }: { compact?: boolean }
+             </span>
+           </Tooltip>
+ 
+-          {endpoint.source !== 'none' && (
++          {(endpoint.source === 'configmap' || endpoint.source === 'localstorage') && (
+             <Tooltip title={t('Remove saved endpoint configuration')}>
+               <IconButton size="small" onClick={handleClear} color="error">
+                 <Icon icon="mdi:delete" width={18} />
+diff --git a/localized/src/utils/metricsEndpoint.ts b/localized/src/utils/metricsEndpoint.ts
+index bf6db12..29e644b 100644
+--- a/localized/src/utils/metricsEndpoint.ts
++++ b/localized/src/utils/metricsEndpoint.ts
+@@ -1,4 +1,4 @@
+-import { ApiProxy } from '@kinvolk/headlamp-plugin/lib';
++import { ApiProxy, K8s } from '@kinvolk/headlamp-plugin/lib';
+ import { useCallback, useEffect, useMemo, useState } from 'react';
+ 
+ const CONFIGMAP_NAME = 'headlamp-kubevirt-config';
+@@ -6,6 +6,10 @@ const CONFIGMAP_KEY = 'metricsEndpoint';
+ const CONFIGMAP_ORGID_KEY = 'metricsOrgId';
+ const LOCALSTORAGE_KEY = 'headlamp-kubevirt-metrics-endpoint';
+ const LOCALSTORAGE_ORGID_KEY = 'headlamp-kubevirt-metrics-orgid';
++const BBT_METRICS_ENDPOINTS = [
++  '/api/v1/namespaces/monitor/services/prometheus-kube-prometheus-prometheus:9090/proxy',
++  '/api/v1/namespaces/monitoring/services/prometheus-stack-kube-prom-prometheus:9090/proxy',
++];
+ 
+ // ── Module-level cache ─────────────────────────────────────────────────
+ 
+@@ -14,6 +18,7 @@ let cachedOrgId: string | null = null;
+ let cachedSource: MetricsEndpointState['source'] = 'none';
+ let cachedCmNamespace: string | null = null;
+ let cacheResolved = false;
++let cachedCluster: string | null = null;
+ const listeners: Array<() => void> = [];
+ 
+ function notify() {
+@@ -27,7 +32,7 @@ interface MetricsEndpointData {
+   orgId: string;
+   available: boolean;
+   loading: boolean;
+-  source: 'configmap' | 'localstorage' | 'none';
++  source: 'configmap' | 'localstorage' | 'preset' | 'none';
+ }
+ 
+ export interface MetricsEndpointState extends MetricsEndpointData {
+@@ -53,7 +58,7 @@ function metricsRequestOpts(orgId?: string | null): Record<string, unknown> {
+  * External URLs (https:// or http://) are fetched directly,
+  * K8s proxy paths are routed through ApiProxy. */
+ // eslint-disable-next-line @typescript-eslint/no-explicit-any
+-export function metricsRequest(url: string, orgId?: string | null): Promise<any> {
++export function metricsRequest(url: string, orgId?: string | null, cluster?: string): Promise<any> {
+   const isExternal = url.startsWith('https://') || url.startsWith('http://');
+   if (isExternal) {
+     const headers: Record<string, string> = { Accept: 'application/json' };
+@@ -63,35 +68,45 @@ export function metricsRequest(url: string, orgId?: string | null): Promise<any>
+       return resp.json();
+     });
+   }
+-  return ApiProxy.request(url, metricsRequestOpts(orgId));
++  return ApiProxy.request(url, {
++    ...metricsRequestOpts(orgId),
++    cluster,
++    autoLogoutOnAuthError: false,
++  });
+ }
+ 
+ // ── Read functions ─────────────────────────────────────────────────────
+ 
+ /** Check known namespaces + KubeVirt namespace for the config ConfigMap. */
+-async function readFromConfigMap(): Promise<{
++async function readFromConfigMap(cluster: string): Promise<{
+   url: string | null;
+   orgId: string | null;
+   namespace: string | null;
+ }> {
+-  const namespacesToCheck = new Set(['kubevirt', 'monitoring', 'default', 'headlamp']);
+-
+-  // Also check the namespace where KubeVirt is actually installed
+-  try {
+-    const kvResp = (await ApiProxy.request('/apis/kubevirt.io/v1/kubevirts')) as {
+-      items?: Array<{ metadata: { namespace: string } }>;
+-    };
+-    const kvNs = kvResp?.items?.[0]?.metadata?.namespace;
+-    if (kvNs) namespacesToCheck.add(kvNs);
+-  } catch {
+-    // KubeVirt API not available, continue with defaults
++  const options = { cluster, autoLogoutOnAuthError: false, timeout: 5000 };
++  const known = await Promise.allSettled(
++    ['kubevirt', 'monitor', 'monitoring', 'default', 'headlamp'].map(namespace =>
++      ApiProxy.request(`/api/v1/namespaces/${namespace}/configmaps/${CONFIGMAP_NAME}`, options)
++    )
++  );
++  for (const result of known) {
++    if (result.status !== 'fulfilled') continue;
++    const cm = result.value as { metadata: { namespace: string }; data?: Record<string, string> };
++    if (cm?.data?.[CONFIGMAP_KEY]) {
++      return {
++        url: cm.data[CONFIGMAP_KEY],
++        orgId: cm.data[CONFIGMAP_ORGID_KEY] || null,
++        namespace: cm.metadata.namespace,
++      };
++    }
+   }
+ 
+   // Use a label selector to find the ConfigMap across all namespaces in a single call
+   // This avoids 404 noise from probing individual namespaces
+   try {
+     const allCMs = (await ApiProxy.request(
+-      `/api/v1/configmaps?fieldSelector=metadata.name=${CONFIGMAP_NAME}`
++      `/api/v1/configmaps?fieldSelector=metadata.name=${CONFIGMAP_NAME}`,
++      options
+     )) as { items?: Array<{ metadata: { namespace: string }; data?: Record<string, string> }> };
+     for (const cm of allCMs?.items || []) {
+       if (cm?.data?.[CONFIGMAP_KEY]) {
+@@ -119,21 +134,38 @@ function readFromLocalStorage(): { url: string | null; orgId: string | null } {
+   }
+ }
+ 
+-/** Resolve the endpoint: localStorage (user override) > ConfigMap (cluster default) > none */
+-async function resolveEndpoint(): Promise<{
++/** 在当前集群中验证和选择可访问的KubeVirt指标源。 */
++async function resolveEndpoint(cluster: string): Promise<{
+   url: string | null;
+   orgId: string | null;
+   source: MetricsEndpointState['source'];
++  namespace?: string | null;
+ }> {
+   const ls = readFromLocalStorage();
+   if (ls.url) return { url: ls.url, orgId: ls.orgId, source: 'localstorage' };
+ 
+-  const cm = await readFromConfigMap();
++  if (!cluster) return { url: null, orgId: null, source: 'none' };
++  const cm = await readFromConfigMap(cluster);
+   if (cm.url) {
+-    cachedCmNamespace = cm.namespace;
+-    return { url: cm.url, orgId: cm.orgId, source: 'configmap' };
++    return { url: cm.url, orgId: cm.orgId, source: 'configmap', namespace: cm.namespace };
+   }
+ 
++  const candidates = await Promise.allSettled(
++    BBT_METRICS_ENDPOINTS.map(async url => {
++      const query = encodeURIComponent('kubevirt_info or kubevirt_vm_info');
++      const result = (await ApiProxy.request(`${url}/api/v1/query?query=${query}`, {
++        cluster,
++        autoLogoutOnAuthError: false,
++        timeout: 5000,
++      })) as { status?: string; data?: { result?: unknown[] } };
++      return result.status === 'success' && result.data?.result?.length ? url : null;
++    })
++  );
++  for (const result of candidates) {
++    if (result.status === 'fulfilled' && result.value) {
++      return { url: result.value, orgId: null, source: 'preset' };
++    }
++  }
+   return { url: null, orgId: null, source: 'none' };
+ }
+ 
+@@ -201,19 +233,23 @@ export async function clearMetricsEndpoint(): Promise<void> {
+   cachedOrgId = null;
+   cachedSource = 'none';
+   cachedCmNamespace = null;
+-  cacheResolved = true;
++  cacheResolved = false;
+   notify();
+ }
+ 
+ // ── Test function ──────────────────────────────────────────────────────
+ 
+-export async function testMetricsEndpoint(url: string, orgId?: string): Promise<TestResult> {
++export async function testMetricsEndpoint(
++  url: string,
++  orgId?: string,
++  cluster?: string
++): Promise<TestResult> {
+   let lastError: string | undefined;
+ 
+   for (const query of ['up', 'kubevirt_info']) {
+     try {
+       const queryUrl = `${url}/api/v1/query?query=${encodeURIComponent(query)}`;
+-      const resp = (await metricsRequest(queryUrl, orgId)) as Record<string, unknown>;
++      const resp = (await metricsRequest(queryUrl, orgId, cluster)) as Record<string, unknown>;
+       if (resp?.status !== 'success') continue;
+       const results = ((resp.data as Record<string, unknown>)?.result as unknown[]) || [];
+       return { ok: true, count: results.length };
+@@ -228,26 +264,54 @@ export async function testMetricsEndpoint(url: string, orgId?: string): Promise<
+ // ── React hook ─────────────────────────────────────────────────────────
+ 
+ export function useMetricsEndpoint(): MetricsEndpointState {
+-  const [state, setState] = useState<MetricsEndpointData>({
+-    baseUrl: cachedEndpoint || '',
+-    orgId: cachedOrgId || '',
++  const cluster = K8s.useCluster() ?? '';
++  const [state, setState] = useState<MetricsEndpointData & { cluster: string }>({
++    cluster,
++    baseUrl: '',
++    orgId: '',
+     available: false,
+-    loading: !cacheResolved || !!cachedEndpoint,
+-    source: cachedSource,
++    loading: true,
++    source: 'none',
+   });
+ 
+   useEffect(() => {
+     let cancelled = false;
++    if (cachedCluster !== cluster) {
++      cachedCluster = cluster;
++      cachedEndpoint = null;
++      cachedOrgId = null;
++      cachedSource = 'none';
++      cachedCmNamespace = null;
++      cacheResolved = false;
++    }
+ 
+     const syncState = async () => {
++      if (cancelled || cachedCluster !== cluster) return;
++      if (!cacheResolved) {
++        const resolved = await resolveEndpoint(cluster);
++        if (cancelled || cachedCluster !== cluster) return;
++        cachedEndpoint = resolved.url;
++        cachedOrgId = resolved.orgId;
++        cachedSource = resolved.source;
++        cachedCmNamespace = resolved.namespace ?? null;
++        cacheResolved = true;
++      }
+       if (!cachedEndpoint) {
+-        if (!cancelled)
+-          setState({ baseUrl: '', orgId: '', available: false, loading: false, source: 'none' });
++        setState({
++          cluster,
++          baseUrl: '',
++          orgId: '',
++          available: false,
++          loading: false,
++          source: 'none',
++        });
+         return;
+       }
+-      const test = await testMetricsEndpoint(cachedEndpoint, cachedOrgId || undefined);
+-      if (!cancelled) {
++      const endpoint = cachedEndpoint;
++      const test = await testMetricsEndpoint(endpoint, cachedOrgId || undefined, cluster);
++      if (!cancelled && cachedCluster === cluster && cachedEndpoint === endpoint) {
+         setState({
++          cluster,
+           baseUrl: cachedEndpoint,
+           orgId: cachedOrgId || '',
+           available: test.ok,
+@@ -257,19 +321,7 @@ export function useMetricsEndpoint(): MetricsEndpointState {
+       }
+     };
+ 
+-    const resolve = async () => {
+-      if (!cacheResolved) {
+-        const { url, orgId, source } = await resolveEndpoint();
+-        cachedEndpoint = url;
+-        cachedOrgId = orgId;
+-        cachedSource = source;
+-        cacheResolved = true;
+-      }
+-      if (cancelled) return;
+-      await syncState();
+-    };
+-
+-    resolve();
++    syncState();
+     listeners.push(syncState);
+ 
+     return () => {
+@@ -277,12 +329,19 @@ export function useMetricsEndpoint(): MetricsEndpointState {
+       const idx = listeners.indexOf(syncState);
+       if (idx >= 0) listeners.splice(idx, 1);
+     };
+-  }, []);
++  }, [cluster]);
+ 
++  const orgId = state.cluster === cluster ? state.orgId : '';
+   const request = useCallback(
+-    (path: string) => metricsRequest(path, state.orgId || undefined),
+-    [state.orgId]
++    (path: string) => metricsRequest(path, orgId || undefined, cluster || undefined),
++    [cluster, orgId]
+   );
+ 
+-  return useMemo(() => ({ ...state, request }), [state, request]);
++  return useMemo(
++    () =>
++      state.cluster === cluster
++        ? { ...state, request }
++        : { baseUrl: '', orgId: '', available: false, loading: true, source: 'none', request },
++    [cluster, state, request]
++  );
+ }
