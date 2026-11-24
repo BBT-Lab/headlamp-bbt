@@ -15,6 +15,7 @@ if (!version) throw new Error('无效的BBT发布标签');
 const [, upstream, sequence, timestamp] = version;
 const read = path => readFileSync(new URL(path, import.meta.url));
 const manifest = JSON.parse(read('../../app/app-build-manifest.json'));
+manifest.checkForUpdates = false;
 manifest.product = {
   ...manifest.product,
   name: 'headlamp-bbt',
