@@ -71,6 +71,7 @@ WORKDIR /headlamp/plugins/bbt/headlamp-plus
 COPY ./plugins/bbt/headlamp-plus/package*.json ./
 RUN --mount=type=cache,target=/root/.npm npm ci
 COPY ./plugins/bbt/headlamp-plus ./
+COPY ./frontend/src/lib/units.ts /headlamp/frontend/src/lib/units.ts
 COPY ./frontend/src/lib/k8s/podDisplayPhase.ts /headlamp/frontend/src/lib/k8s/podDisplayPhase.ts
 COPY ./frontend/src/lib/k8s/eventReason.ts /headlamp/frontend/src/lib/k8s/eventReason.ts
 COPY ./frontend/src/lib/k8s/gpu /headlamp/frontend/src/lib/k8s/gpu
