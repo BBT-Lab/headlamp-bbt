@@ -319,7 +319,8 @@ export function GpuDeviceTable({
     'Workload',
     'Elapsed',
   ];
-  const sizes = [56, 73, 153, 62, 61, 119, 110, undefined, 85];
+  const nodeWidth = `clamp(56px, ${Math.max(...cards.map(card => card.node.length), 4) + 2}ch, 36ch)`;
+  const sizes = [nodeWidth, 73, 153, 62, 61, 119, 110, undefined, 85];
   const firstColumn = showNodes ? 0 : 1;
   const visibleHeadings = headings.slice(firstColumn);
   const groupSx = { bgcolor: 'action.hover', verticalAlign: 'middle' };

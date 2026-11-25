@@ -116,18 +116,58 @@ export async function loadGpuTelemetry(
   );
   const unmappedNodes = new Set<string>();
   const allocationQuery =
-    'max by(namespace,pod,node) (kube_pod_container_resource_requests{resource=~".*(vgpu|mirage_gpu).*"} > 0) and on(namespace,pod) (kube_pod_status_phase{phase="Running"} == 1)';
+    'max by(namespace,pod,node,resource) (kube_pod_container_resource_requests{resource=~".*(vgpu|mirage_gpu).*"} > 0) and on(namespace,pod) (kube_pod_status_phase{phase="Running"} == 1)';
   try {
-    const allocations = await query(
-      request,
-      cluster,
-      config,
-      new URLSearchParams({ query: allocationQuery }),
-      signal,
-      'vector'
+    const [allocations, shared] = await Promise.all([
+      query(
+        request,
+        cluster,
+        config,
+        new URLSearchParams({ query: allocationQuery }),
+        signal,
+        'vector'
+      ),
+      query(
+        request,
+        cluster,
+        config,
+        new URLSearchParams({
+          query:
+            'max by(NodeName,devID) (volcano_vgpu_device_shared_number and (timestamp(volcano_vgpu_device_shared_number) > time() - 120))',
+        }),
+        signal,
+        'vector'
+      ),
+    ]);
+    const sharedCounts = new Map(
+      shared.map(({ metric, value }) => [
+        JSON.stringify([metric.NodeName, metric.devID]),
+        Number(value?.[1]),
+      ])
     );
+    const completeNodes = new Set(
+      cards
+        .map(card => card.node)
+        .filter(node =>
+          cards
+            .filter(card => card.node === node)
+            .every(card => {
+              const count = sharedCounts.get(JSON.stringify([node, card.acceleratorId]));
+              return count !== undefined && Number.isInteger(count) && count >= 0;
+            })
+        )
+    );
+    for (const card of cards) {
+      if (!completeNodes.has(card.node)) continue;
+      const count = sharedCounts.get(JSON.stringify([card.node, card.acceleratorId]));
+      card.occupied ||= count !== undefined && count > 0;
+    }
     for (const { metric } of allocations) {
-      if (!mapped.has(`${metric.namespace}/${metric.pod}`)) unmappedNodes.add(metric.node || '*');
+      if (
+        !mapped.has(`${metric.namespace}/${metric.pod}`) &&
+        !(metric.resource?.startsWith('volcano_sh_vgpu') && completeNodes.has(metric.node))
+      )
+        unmappedNodes.add(metric.node || '*');
     }
   } catch (error) {
     signal.throwIfAborted();

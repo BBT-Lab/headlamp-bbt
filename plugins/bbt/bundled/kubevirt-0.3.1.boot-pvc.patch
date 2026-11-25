@@ -1,0 +1,76 @@
+diff --git a/localized/src/components/VirtualMachines/VMFormFull.tsx b/localized/src/components/VirtualMachines/VMFormFull.tsx
+index e60324e..e5a9a9e 100644
+--- a/localized/src/components/VirtualMachines/VMFormFull.tsx
++++ b/localized/src/components/VirtualMachines/VMFormFull.tsx
+@@ -17,7 +17,7 @@
+ // 日期：2026-11-07
+ 
+ import { Icon } from '@iconify/react';
+-import { ApiProxy } from '@kinvolk/headlamp-plugin/lib';
++import { ApiProxy, K8s } from '@kinvolk/headlamp-plugin/lib';
+ import {
+   Accordion,
+   AccordionDetails,
+@@ -205,6 +205,7 @@ export default function VMFormFull({
+   // Parse current values from resource
+   const name = resource.metadata?.name || '';
+   const namespace = resource.metadata?.namespace || 'default';
++  const cluster = K8s.useCluster() ?? '';
+ 
+   // Labels and Annotations
+   // Use local state for UI arrays (labels, annotations, etc.) to support empty entries
+@@ -331,6 +332,34 @@ export default function VMFormFull({
+   // where the DVT doesn't exist until a DataSource is actually picked)
+   const [bootSourceTypeOverride, setBootSourceTypeOverride] = React.useState('');
+   const bootSourceType = bootSourceTypeOverride || derivedBootSourceType;
++  const bootPvcNamespace = bootDvt?.spec?.source?.pvc?.namespace || namespace;
++  const [bootPvcOptions, setBootPvcOptions] = useState<{ namespace: string; names: string[] }>({
++    namespace: '',
++    names: [],
++  });
++  React.useEffect(() => {
++    if (bootSourceType !== 'pvc' || !bootPvcNamespace || !cluster) return;
++    let cancelled = false;
++    setBootPvcOptions({ namespace: bootPvcNamespace, names: [] });
++    ApiProxy.request(
++      `/api/v1/namespaces/${encodeURIComponent(bootPvcNamespace)}/persistentvolumeclaims`,
++      { cluster, autoLogoutOnAuthError: false }
++    )
++      .then((response: { items?: Array<{ metadata: { name: string } }> }) => {
++        if (!cancelled) {
++          setBootPvcOptions({
++            namespace: bootPvcNamespace,
++            names: (response.items ?? []).map(pvc => pvc.metadata.name),
++          });
++        }
++      })
++      .catch(err => {
++        if (!cancelled) console.error('Failed to fetch source PVCs:', err);
++      });
++    return () => {
++      cancelled = true;
++    };
++  }, [bootSourceType, bootPvcNamespace, cluster]);
+   const [bootCatalogOpen, setBootCatalogOpen] = useState(false);
+ 
+   const handleBootCatalogSelect = (selection: CatalogSelection) => {
+@@ -2891,7 +2920,9 @@ export default function VMFormFull({
+                       handleBootDvtUpdate({
+                         source: {
+                           pvc: {
+-                            name: bootDvt?.spec?.source?.pvc?.name || '',
++                            name: (newValue || namespace) === bootPvcNamespace
++                              ? bootDvt?.spec?.source?.pvc?.name || ''
++                              : '',
+                             namespace: newValue || namespace,
+                           },
+                         },
+@@ -2903,7 +2934,7 @@ export default function VMFormFull({
+                 <Grid item xs={6}>
+                   <Autocomplete
+                     fullWidth
+-                    options={pvcs}
++                    options={bootPvcOptions.namespace === bootPvcNamespace ? bootPvcOptions.names : []}
+                     value={bootDvt?.spec?.source?.pvc?.name || ''}
+                     onChange={(_, newValue) => {
+                       handleBootDvtUpdate({
